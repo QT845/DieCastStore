@@ -122,7 +122,7 @@ public class UserController extends HttpServlet {
 
         if (userName == null || userName.trim().isEmpty()
                 || password == null || password.trim().isEmpty()) {
-            request.setAttribute("error", "Please enter your User Name and Password!");
+            request.setAttribute("message", "Please enter your User Name and Password!");
             return LOGIN_PAGE;
         }
 
@@ -140,18 +140,17 @@ public class UserController extends HttpServlet {
                         session.setAttribute("customerId", account.getCustomerId());
                         session.setAttribute("role", account.getRole());
 
-                        request.setAttribute("success", "Login successfully!");
                         return WELCOME_PAGE;
                     } else {
-                        request.setAttribute("error", "Customer information not found!");
+                        request.setAttribute("message", "Customer information not found!");
                         return LOGIN_PAGE;
                     }
                 } else {
-                    request.setAttribute("error", "Can not load account information!");
+                    request.setAttribute("message", "Can not load account information!");
                     return LOGIN_PAGE;
                 }
             } else {
-                request.setAttribute("error", "Username or password is incorrect!");
+                request.setAttribute("message", "Username or password is incorrect!");
                 return LOGIN_PAGE;
             }
         } catch (Exception e) {
@@ -169,14 +168,6 @@ public class UserController extends HttpServlet {
         String phone = request.getParameter("phone");
         String address = request.getParameter("address");
 
-        String emptyError = "";
-        String lengthError = "";
-        String confirmError = "";
-        String userNameError = "";
-        String emailError = "";
-        String phoneError = "";
-        String phoneMessage = "";
-
         if (userName == null
                 || password == null
                 || confirmPassword == null
@@ -184,16 +175,26 @@ public class UserController extends HttpServlet {
                 || email == null
                 || phone == null
                 || address == null) {
-            emptyError = "Please fill in all required information!";
-            request.setAttribute("emptyError", emptyError);
+            request.setAttribute("emptyError", "Please fill in all required information!");
+            return REGISTER_PAGE;
         }
         if (password.length() < 6) {
-            lengthError = "Password must be at least 6 characters!";
-            request.setAttribute("lengthError", lengthError);
+            request.setAttribute("lengthError", "Password must be at least 6 characters!");
+            return REGISTER_PAGE;
         }
         if (!password.equals(confirmPassword)) {
-            confirmError = "Password confirmation does not match!";
-            request.setAttribute("confirmError", confirmError);
+            request.setAttribute("confirmError", "Password confirmation does not match!");
+            return REGISTER_PAGE;
+        }
+
+        if (!AuthUtils.isValidEmail(email)) {
+            request.setAttribute("emailError", "Incorrect email format! Please try again.");
+            return REGISTER_PAGE;
+        }
+        if (!AuthUtils.isValidPhone(phone)) {
+            request.setAttribute("phoneError", "Incorrect phone format! Please try again.");
+            request.setAttribute("phoneMessage", "Phone number must start with 09|08|07|05|03 and follow by 8 number!");
+            return REGISTER_PAGE;
         }
 
         try {
@@ -201,23 +202,14 @@ public class UserController extends HttpServlet {
             CustomerAccountDAO accountDAO = new CustomerAccountDAO();
 
             if (accountDAO.isUserNameExists(userName)) {
-                userNameError = "Username already exists! Please choose another one.";
-                request.setAttribute("userNameError", userNameError);
+                request.setAttribute("userNameError", "Username already exists! Please choose another one.");
+                return REGISTER_PAGE;
             }
             if (customerDAO.isEmailExists(email)) {
-                emailError = "Email already exists! Please use another email.";
-                request.setAttribute("emailError", emailError);
+                request.setAttribute("emailError", "Email already exists! Please use another email.");
+                return REGISTER_PAGE;
             }
-            if (AuthUtils.isValidEmail(email)) {
-                emailError = "Incorrect email format! Please try again.";
-                request.setAttribute("emailError", emailError);
-            }
-            if (AuthUtils.isValidPhone(phone)) {
-                phoneError = "Incorrect phone format! Please try again.";
-                phoneMessage = "Phone number must start with 09|08|07|05|03 and follow by 8 number!";
-                request.setAttribute("phoneError", phoneError);
-                request.setAttribute("phoneMessage", phoneMessage);
-            }
+
             Customer customer = new Customer();
             CustomerAccount account = new CustomerAccount();
 
@@ -239,6 +231,8 @@ public class UserController extends HttpServlet {
 
                 if (isAccountCreated) {
                     request.setAttribute("success", "Registration successful! Your Customer ID is: " + customerId);
+                    request.setAttribute("customer", customer);
+                    request.setAttribute("account", account);
                     return LOGIN_PAGE;
                 } else {
                     customerDAO.delete(customerId);
@@ -252,8 +246,9 @@ public class UserController extends HttpServlet {
 
         } catch (Exception e) {
             e.printStackTrace();
+            return REGISTER_PAGE;
         }
-        return REGISTER_PAGE;
+
     }
 
     private String handleLogout(HttpServletRequest request, HttpServletResponse response) {
@@ -269,19 +264,45 @@ public class UserController extends HttpServlet {
     }
 
     private String handleUpdateProfile(HttpServletRequest request, HttpServletResponse response) {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
-    }
+        if (!AuthUtils.isLoggedin(request)) {
+            request.setAttribute("error", "Please login first!");
+            return LOGIN_PAGE;
+        }
 
-    private String handleViewProfile(HttpServletRequest request, HttpServletResponse response) {
-        CustomerAccountDAO accountDAO = new CustomerAccountDAO();
-        if(AuthUtils.isLoggedin(request)) {
-        CustomerAccount account =  
-                }
         return null;
     }
 
+    private String handleViewProfile(HttpServletRequest request, HttpServletResponse response) {
+        if (!AuthUtils.isLoggedin(request)) {
+            request.setAttribute("error", "Please login first!");
+            return LOGIN_PAGE;
+        }
+        CustomerAccount account = AuthUtils.getCurrentUser(request);
+        try {
+            CustomerDAO customerDAO = new CustomerDAO();
+            Customer customer = customerDAO.getById(account.getCustomerId());
+
+            if (customer != null) {
+                request.setAttribute("account", account);
+                request.setAttribute("customer", customer);
+                return PROFILE_PAGE;
+            } else {
+                request.setAttribute("error", "Customer information not found!");
+                return LOGIN_PAGE;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return LOGIN_PAGE;
+        }
+    }
+
     private String handleChangePassword(HttpServletRequest request, HttpServletResponse response) {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+        if (!AuthUtils.isLoggedin(request)) {
+            request.setAttribute("error", "Please login first!");
+            return LOGIN_PAGE;
+        }
+
+        return null;
     }
 
 }
