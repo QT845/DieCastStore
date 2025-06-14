@@ -1,33 +1,28 @@
-# Ignore build output
+# Build output
 /build/
 dist/
 
-# Ignore NetBeans project-specific private config
-/nbproject/private/
+# Ignore private NetBeans settings
+nbproject/private/
 
-/nbproject/build-impl.xml
-/nbproject/genfiles.properties
-/nbproject/project.properties
-/nbproject/project.xml
-
-# Ignore class files
+# Compiled class files
 *.class
 
-# Ignore log files
+# Logs
 *.log
 
-# Ignore system files
+# OS files
 .DS_Store
 Thumbs.db
 
-# Ignore IDE settings
-*.iml
+# IDE configs (optional, depending on team)
 .idea/
 .vscode/
+*.iml
 
-# Ignore OS-specific files
+# Swap/temp files
 *.swp
 *.swo
 
-# Optional: Ignore environment variables or local configs
+# Local env
 .env
