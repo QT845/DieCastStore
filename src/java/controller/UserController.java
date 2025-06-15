@@ -58,9 +58,6 @@ public class UserController extends HttpServlet {
                     case "viewProfile":
                         url = handleViewProfile(request, response);
                         break;
-                    case "changePassword":
-                        url = handleChangePassword(request, response);
-                        break;
                     default:
                         request.setAttribute("message", "Invalid action: " + action);
                         url = LOGIN_PAGE;
@@ -168,6 +165,18 @@ public class UserController extends HttpServlet {
         String phone = request.getParameter("phone");
         String address = request.getParameter("address");
 
+        Customer preserveCustomer = new Customer();
+        preserveCustomer.setCustomerName(customerName);
+        preserveCustomer.setEmail(email);
+        preserveCustomer.setPhone(phone);
+        preserveCustomer.setAddress(address);
+
+        CustomerAccount preserveAccount = new CustomerAccount();
+        preserveAccount.setUserName(userName);
+
+        request.setAttribute("customer", preserveCustomer);
+        request.setAttribute("account", preserveAccount);
+
         if (userName == null
                 || password == null
                 || confirmPassword == null
@@ -231,19 +240,16 @@ public class UserController extends HttpServlet {
 
                 if (isAccountCreated) {
                     request.setAttribute("success", "Registration successful! Your Customer ID is: " + customerId);
-                    request.setAttribute("customer", customer);
-                    request.setAttribute("account", account);
                     return LOGIN_PAGE;
                 } else {
-                    customerDAO.delete(customerId);
-                    request.setAttribute("error", "Failed to create account!");
+                    request.setAttribute("error", "Failed to create account. Please try again later.");
                     return REGISTER_PAGE;
                 }
             } else {
-                request.setAttribute("error", "Failed to create customer profile!");
+                request.setAttribute("error", "Failed to create customer. Please try again later.");
                 return REGISTER_PAGE;
-            }
 
+            }
         } catch (Exception e) {
             e.printStackTrace();
             return REGISTER_PAGE;
@@ -252,13 +258,9 @@ public class UserController extends HttpServlet {
     }
 
     private String handleLogout(HttpServletRequest request, HttpServletResponse response) {
-        HttpSession session = request.getSession();
+        HttpSession session = request.getSession(false);
         if (session != null) {
-            CustomerAccount account = (CustomerAccount) session.getAttribute("account");
-            Customer customer = (Customer) session.getAttribute("customer");
-            if (customer != null || account != null) {
-                session.invalidate();
-            }
+            session.invalidate();
         }
         return WELCOME_PAGE;
     }
@@ -268,7 +270,28 @@ public class UserController extends HttpServlet {
             request.setAttribute("error", "Please login first!");
             return LOGIN_PAGE;
         }
+        CustomerAccount account = AuthUtils.getCurrentUser(request);
+        if (account == null) {
+            request.setAttribute("error", "Session expired. Please login again!");
+            return LOGIN_PAGE;
+        }
+        try {
+            CustomerDAO customerDAO = new CustomerDAO();
+            Customer customer = customerDAO.getById(account.getCustomerId());
+            if (customer == null) {
+                request.setAttribute("error", "Customer information not found!");
+                return LOGIN_PAGE;
+            }
+            String customerName = request.getParameter("customerName");
+            String email = request.getParameter("email");
+            String phone = request.getParameter("phone");
+            String address = request.getParameter("address");
+            String oldPassword = request.getParameter("oldPassword");
+            String newPassword = request.getParameter("newPassword");
+            String confirmPassword = request.getParameter("confirmPassword");
 
+        } catch (Exception e) {
+        }
         return null;
     }
 
@@ -295,14 +318,4 @@ public class UserController extends HttpServlet {
             return LOGIN_PAGE;
         }
     }
-
-    private String handleChangePassword(HttpServletRequest request, HttpServletResponse response) {
-        if (!AuthUtils.isLoggedin(request)) {
-            request.setAttribute("error", "Please login first!");
-            return LOGIN_PAGE;
-        }
-
-        return null;
-    }
-
 }

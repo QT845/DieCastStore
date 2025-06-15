@@ -15,7 +15,7 @@ import jakarta.servlet.http.HttpServletResponse;
  *
  * @author hqthi
  */
-@WebServlet(name = "MainController", urlPatterns = {"","/","/MainController"})
+@WebServlet(name = "MainController", urlPatterns = {"/", "/MainController"})
 public class MainController extends HttpServlet {
 
     private static final String WELCOME = "home.jsp";
@@ -26,7 +26,6 @@ public class MainController extends HttpServlet {
                 || "register".equals(action)
                 || "updateProfile".equals(action)
                 || "viewProfile".equals(action)
-                || "changePassword".equals(action)
                 || "showLogin".equals(action)
                 || "showRegister".equals(action);
     }
