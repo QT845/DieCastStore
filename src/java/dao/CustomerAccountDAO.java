@@ -24,6 +24,7 @@ public class CustomerAccountDAO implements IDAO<CustomerAccount, String> {
     private static final String GET_BY_USER_NAME = "SELECT * FROM customerAccount WHERE userName = ?";
     private static final String CREATE = "INSERT INTO customerAccount(userName, customerId, password, role) VALUES (?, ?, ?, ?)";
     private static final String UPDATE = "UPDATE customerAccount SET userName = ?, password = ?, role = ? WHERE customerId = ?";
+    private static final String CHANGE_PASSWORD = "UPDATE customerAccount SET password = ? WHERE customerId = ?";
     private static final String DELETE = "DELETE FROM customerAccount WHERE customerId = ?";
     private static final String COUNT = "SELECT COUNT(*) FROM customerAccount";
 
@@ -59,6 +60,24 @@ public class CustomerAccountDAO implements IDAO<CustomerAccount, String> {
             st.setString(2, entity.getPassword());
             st.setInt(3, entity.getRole());
             st.setString(4, entity.getCustomerId());
+
+            return st.executeUpdate() > 0;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        } finally {
+            closeResources(c, st, null);
+        }
+    }
+
+    public boolean changePassword(CustomerAccount entity) {
+        Connection c = null;
+        PreparedStatement st = null;
+        try {
+            c = DBUtils.getConnection();
+            st = c.prepareStatement(UPDATE);
+            st.setString(1, entity.getPassword());
+            st.setString(2, entity.getCustomerId());
 
             return st.executeUpdate() > 0;
         } catch (Exception e) {
@@ -184,30 +203,11 @@ public class CustomerAccountDAO implements IDAO<CustomerAccount, String> {
 
     public boolean login(String userName, String password) {
         CustomerAccount account = getByUserName(userName);
-        if(account != null) {
-            if(account.getPassword().equals(password)){
+        if (account != null) {
+            if (account.getPassword().equals(password)) {
                 return true;
             }
         }
         return false;
-    }
-
-    public boolean changePassword(String customerId, String newPassword) {
-        Connection c = null;
-        PreparedStatement st = null;
-        try {
-            c = DBUtils.getConnection();
-            st = c.prepareStatement("UPDATE customerAccount SET password = ? WHERE customerId = ?");
-            st.setString(1, newPassword);
-            st.setString(2, customerId);
-
-            return st.executeUpdate() > 0;
-        } catch (Exception e) {
-            System.err.println("Error changing password: " + e.getMessage());
-            e.printStackTrace();
-            return false;
-        } finally {
-            closeResources(c, st, null);
-        }
     }
 }

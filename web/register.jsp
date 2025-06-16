@@ -565,7 +565,7 @@
             const form = document.querySelector('form');
             const requiredFields = document.querySelectorAll('input[required]');
             
-            // Form submission validation - chỉ làm đỏ viền, không hiện text "This field is required"
+            // Form submission validation 
             form.addEventListener('submit', function(e) {
                 let emptyFields = [];
                 let hasValidationErrors = false;

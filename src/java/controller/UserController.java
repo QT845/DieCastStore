@@ -53,10 +53,13 @@ public class UserController extends HttpServlet {
                         url = handleLogout(request, response);
                         break;
                     case "updateProfile":
-                        url = handleUpdateProfile(request, response);
+                        url = handleProfileUpdating(request, response);
                         break;
                     case "viewProfile":
-                        url = handleViewProfile(request, response);
+                        url = handleProfileViewing(request, response);
+                        break;
+                    case "editProfile":
+                        url = handleProfileEditing(request, response);
                         break;
                     default:
                         request.setAttribute("message", "Invalid action: " + action);
@@ -177,13 +180,13 @@ public class UserController extends HttpServlet {
         request.setAttribute("customer", preserveCustomer);
         request.setAttribute("account", preserveAccount);
 
-        if (userName == null
-                || password == null
-                || confirmPassword == null
-                || customerName == null
-                || email == null
-                || phone == null
-                || address == null) {
+        if (userName == null && userName.isEmpty()
+                || password == null && password.isEmpty()
+                || confirmPassword == null && confirmPassword.isEmpty()
+                || customerName == null && customerName.isEmpty()
+                || email == null && email.isEmpty()
+                || phone == null && phone.isEmpty()
+                || address == null && address.isEmpty()) {
             request.setAttribute("emptyError", "Please fill in all required information!");
             return REGISTER_PAGE;
         }
@@ -217,6 +220,9 @@ public class UserController extends HttpServlet {
             if (customerDAO.isEmailExists(email)) {
                 request.setAttribute("emailError", "Email already exists! Please use another email.");
                 return REGISTER_PAGE;
+            }
+            if (customerDAO.isPhoneExists(phone)) {
+                request.setAttribute("phoneError", "Phone number already exists! Please use another phone number.");
             }
 
             Customer customer = new Customer();
@@ -265,42 +271,135 @@ public class UserController extends HttpServlet {
         return WELCOME_PAGE;
     }
 
-    private String handleUpdateProfile(HttpServletRequest request, HttpServletResponse response) {
+    private String handleProfileUpdating(HttpServletRequest request, HttpServletResponse response) {
         if (!AuthUtils.isLoggedin(request)) {
             request.setAttribute("error", "Please login first!");
             return LOGIN_PAGE;
         }
         CustomerAccount account = AuthUtils.getCurrentUser(request);
-        if (account == null) {
-            request.setAttribute("error", "Session expired. Please login again!");
-            return LOGIN_PAGE;
-        }
+
+        String customerName = request.getParameter("customerName");
+        String email = request.getParameter("email");
+        String phone = request.getParameter("phone");
+        String address = request.getParameter("address");
+        String oldPassword = request.getParameter("oldPassword");
+        String newPassword = request.getParameter("newPassword");
+        String confirmPassword = request.getParameter("confirmPassword");
+
         try {
+            CustomerAccountDAO accountDAO = new CustomerAccountDAO();
             CustomerDAO customerDAO = new CustomerDAO();
             Customer customer = customerDAO.getById(account.getCustomerId());
-            if (customer == null) {
-                request.setAttribute("error", "Customer information not found!");
-                return LOGIN_PAGE;
-            }
-            String customerName = request.getParameter("customerName");
-            String email = request.getParameter("email");
-            String phone = request.getParameter("phone");
-            String address = request.getParameter("address");
-            String oldPassword = request.getParameter("oldPassword");
-            String newPassword = request.getParameter("newPassword");
-            String confirmPassword = request.getParameter("confirmPassword");
 
+            if (customerName.isEmpty()) {
+                request.setAttribute("nameError", "Customer name is required!");
+                request.setAttribute("isEdit", true);
+                return PROFILE_PAGE;
+            }
+            if (email.isEmpty()) {
+                request.setAttribute("emailError", "Email is required!");
+                request.setAttribute("isEdit", true);
+                return PROFILE_PAGE;
+            }
+            if (phone.isEmpty()) {
+                request.setAttribute("phoneError", "Phone is required!");
+                request.setAttribute("isEdit", true);
+                return PROFILE_PAGE;
+            }
+            if (address.isEmpty()) {
+                request.setAttribute("addressError", "Address is required!");
+                request.setAttribute("isEdit", true);
+                return PROFILE_PAGE;
+            }
+            if (!email.equals(customer.getEmail())) {
+                boolean check = customerDAO.isEmailExists(email);
+                if (!check) {
+                    request.setAttribute("emailError", "Email already exists! Please use another email.");
+                    request.setAttribute("isEdit", true);
+                    return PROFILE_PAGE;
+                }
+            }
+            if (!phone.equals(customer.getPhone())) {
+                boolean check = customerDAO.isPhoneExists(phone);
+                if (!check) {
+                    request.setAttribute("phoneError", "Phone number already exists! Please use another phone number.");
+                    request.setAttribute("isEdit", true);
+                    return PROFILE_PAGE;
+                }
+            }
+            boolean passwordChanged = false;
+            if (oldPassword == null || oldPassword.isEmpty()
+                    && newPassword == null || newPassword.isEmpty()
+                    && confirmPassword == null || newPassword.isEmpty()) {
+
+            } else {
+                if (oldPassword == null || oldPassword.isEmpty()
+                        || newPassword == null || newPassword.isEmpty()
+                        || confirmPassword == null || newPassword.isEmpty()) {
+                    request.setAttribute("oldPasswordError", "Please enter your current password!");
+                    request.setAttribute("passwordError", "Please enter your new password!");
+                    request.setAttribute("confirmError", "Please enter confirm password!");
+                    request.setAttribute("isEdit", true);
+                    return PROFILE_PAGE;
+                }
+                if (!oldPassword.equals(account.getPassword())) {
+                    request.setAttribute("oldPasswordError", "Current password is incorrect!");
+                    request.setAttribute("isEdit", true);
+                    return PROFILE_PAGE;
+                }
+                if (oldPassword.equals(newPassword)) {
+                    request.setAttribute("passwordError", "New password must be different from current password!");
+                    request.setAttribute("isEdit", true);
+                    return PROFILE_PAGE;
+                }
+                if (!newPassword.equals(confirmPassword)) {
+                    request.setAttribute("passwordError", "New password and confirm password do not match!");
+                    request.setAttribute("isEdit", true);
+                    return PROFILE_PAGE;
+                }
+                passwordChanged = true;
+            }
+            customer.setCustomerName(customerName);
+            customer.setEmail(email);
+            customer.setPhone(phone);
+            customer.setAddress(address);
+
+            boolean isCustomerUpdated = customerDAO.create(customer);
+            boolean isPasswordChanged = true;
+
+            if (passwordChanged) {
+                account.setPassword(newPassword);
+                isPasswordChanged = accountDAO.changePassword(account);
+            }
+
+            String mess = "";
+
+            if (isCustomerUpdated) {
+                mess = "Profile updated successfully!";
+            }
+            if (passwordChanged) {
+                mess += "Password has been changed.";
+            }
+            request.setAttribute("success", mess);
+
+            Customer updatedCustomer = customerDAO.getById(account.getCustomerId());
+            request.setAttribute("customer", updatedCustomer);
+            request.setAttribute("isEdit", false);
+            return PROFILE_PAGE;
         } catch (Exception e) {
+            e.printStackTrace();
+            request.setAttribute("error", "System error occurred. Please try again later.");
+            return LOGIN_PAGE;
         }
-        return null;
     }
 
-    private String handleViewProfile(HttpServletRequest request, HttpServletResponse response) {
+    private String handleProfileViewing(HttpServletRequest request, HttpServletResponse response) {
         if (!AuthUtils.isLoggedin(request)) {
             request.setAttribute("error", "Please login first!");
             return LOGIN_PAGE;
         }
         CustomerAccount account = AuthUtils.getCurrentUser(request);
+
         try {
             CustomerDAO customerDAO = new CustomerDAO();
             Customer customer = customerDAO.getById(account.getCustomerId());
@@ -317,5 +416,24 @@ public class UserController extends HttpServlet {
             e.printStackTrace();
             return LOGIN_PAGE;
         }
+    }
+
+    private String handleProfileEditing(HttpServletRequest request, HttpServletResponse response) {
+        CustomerAccount account = AuthUtils.getCurrentUser(request);
+        if (account == null) {
+            request.setAttribute("error", "Session expired. Please login again!");
+            return LOGIN_PAGE;
+        }
+
+        CustomerDAO customerDAO = new CustomerDAO();
+        Customer customer = customerDAO.getById(account.getCustomerId());
+
+        if (customer != null) {
+            request.setAttribute("account", account);
+            request.setAttribute("customer", customer);
+            request.setAttribute("isEdit", true);
+            return PROFILE_PAGE;
+        }
+        return handleProfileViewing(request, response);
     }
 }
