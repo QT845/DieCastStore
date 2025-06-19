@@ -28,6 +28,11 @@ public class UserController extends HttpServlet {
     private static final String LOGIN_PAGE = "login.jsp";
     private static final String REGISTER_PAGE = "register.jsp";
     private static final String PROFILE_PAGE = "profileForm.jsp";
+    private static final String EDIT_PAGE = "editProfile.jsp";
+
+    public static boolean isNullOrEmpty(String str) {
+        return str == null || str.trim().isEmpty();
+    }
 
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -60,6 +65,9 @@ public class UserController extends HttpServlet {
                         break;
                     case "editProfile":
                         url = handleProfileEditing(request, response);
+                        break;
+                    case "changePassword":
+                        url = handlePasswordChanging(request, response);
                         break;
                     default:
                         request.setAttribute("message", "Invalid action: " + action);
@@ -120,8 +128,8 @@ public class UserController extends HttpServlet {
         CustomerAccountDAO accountDAO = new CustomerAccountDAO();
         CustomerDAO customerDAO = new CustomerDAO();
 
-        if (userName == null || userName.trim().isEmpty()
-                || password == null || password.trim().isEmpty()) {
+        if (isNullOrEmpty(userName)
+                || isNullOrEmpty(password)) {
             request.setAttribute("message", "Please enter your User Name and Password!");
             return LOGIN_PAGE;
         }
@@ -168,25 +176,13 @@ public class UserController extends HttpServlet {
         String phone = request.getParameter("phone");
         String address = request.getParameter("address");
 
-        Customer preserveCustomer = new Customer();
-        preserveCustomer.setCustomerName(customerName);
-        preserveCustomer.setEmail(email);
-        preserveCustomer.setPhone(phone);
-        preserveCustomer.setAddress(address);
-
-        CustomerAccount preserveAccount = new CustomerAccount();
-        preserveAccount.setUserName(userName);
-
-        request.setAttribute("customer", preserveCustomer);
-        request.setAttribute("account", preserveAccount);
-
-        if (userName == null && userName.isEmpty()
-                || password == null && password.isEmpty()
-                || confirmPassword == null && confirmPassword.isEmpty()
-                || customerName == null && customerName.isEmpty()
-                || email == null && email.isEmpty()
-                || phone == null && phone.isEmpty()
-                || address == null && address.isEmpty()) {
+        if (isNullOrEmpty(userName)
+                || isNullOrEmpty(password)
+                || isNullOrEmpty(confirmPassword)
+                || isNullOrEmpty(customerName)
+                || isNullOrEmpty(email)
+                || isNullOrEmpty(phone)
+                || isNullOrEmpty(address)) {
             request.setAttribute("emptyError", "Please fill in all required information!");
             return REGISTER_PAGE;
         }
@@ -223,6 +219,7 @@ public class UserController extends HttpServlet {
             }
             if (customerDAO.isPhoneExists(phone)) {
                 request.setAttribute("phoneError", "Phone number already exists! Please use another phone number.");
+                return REGISTER_PAGE;
             }
 
             Customer customer = new Customer();
@@ -258,9 +255,9 @@ public class UserController extends HttpServlet {
             }
         } catch (Exception e) {
             e.printStackTrace();
+            request.setAttribute("error", "System error occurred. Please try again later.");
             return REGISTER_PAGE;
         }
-
     }
 
     private String handleLogout(HttpServletRequest request, HttpServletResponse response) {
@@ -272,7 +269,7 @@ public class UserController extends HttpServlet {
     }
 
     private String handleProfileUpdating(HttpServletRequest request, HttpServletResponse response) {
-        if (!AuthUtils.isLoggedin(request)) {
+        if (!AuthUtils.isLoggedIn(request)) {
             request.setAttribute("error", "Please login first!");
             return LOGIN_PAGE;
         }
@@ -282,119 +279,83 @@ public class UserController extends HttpServlet {
         String email = request.getParameter("email");
         String phone = request.getParameter("phone");
         String address = request.getParameter("address");
-        String oldPassword = request.getParameter("oldPassword");
-        String newPassword = request.getParameter("newPassword");
-        String confirmPassword = request.getParameter("confirmPassword");
 
         try {
-            CustomerAccountDAO accountDAO = new CustomerAccountDAO();
             CustomerDAO customerDAO = new CustomerDAO();
             Customer customer = customerDAO.getById(account.getCustomerId());
 
-            if (customerName.isEmpty()) {
+            if (isNullOrEmpty(customerName)) {
                 request.setAttribute("nameError", "Customer name is required!");
-                request.setAttribute("isEdit", true);
-                return PROFILE_PAGE;
+                return EDIT_PAGE;
             }
-            if (email.isEmpty()) {
+            if (isNullOrEmpty(email)) {
                 request.setAttribute("emailError", "Email is required!");
-                request.setAttribute("isEdit", true);
-                return PROFILE_PAGE;
+                return EDIT_PAGE;
             }
-            if (phone.isEmpty()) {
+            if (isNullOrEmpty(phone)) {
                 request.setAttribute("phoneError", "Phone is required!");
-                request.setAttribute("isEdit", true);
-                return PROFILE_PAGE;
+                return EDIT_PAGE;
             }
-            if (address.isEmpty()) {
+            if (isNullOrEmpty(address)) {
                 request.setAttribute("addressError", "Address is required!");
-                request.setAttribute("isEdit", true);
-                return PROFILE_PAGE;
+                return EDIT_PAGE;
             }
             if (!email.equals(customer.getEmail())) {
                 boolean check = customerDAO.isEmailExists(email);
-                if (!check) {
+                if (check) {
                     request.setAttribute("emailError", "Email already exists! Please use another email.");
-                    request.setAttribute("isEdit", true);
-                    return PROFILE_PAGE;
+                    return EDIT_PAGE;
                 }
+            }
+            if (!AuthUtils.isValidEmail(email)) {
+                request.setAttribute("emailError", "Incorrect email format! Please try again.");
+                return EDIT_PAGE;
             }
             if (!phone.equals(customer.getPhone())) {
                 boolean check = customerDAO.isPhoneExists(phone);
-                if (!check) {
+                if (check) {
                     request.setAttribute("phoneError", "Phone number already exists! Please use another phone number.");
-                    request.setAttribute("isEdit", true);
-                    return PROFILE_PAGE;
+                    return EDIT_PAGE;
                 }
             }
-            boolean passwordChanged = false;
-            if (oldPassword == null || oldPassword.isEmpty()
-                    && newPassword == null || newPassword.isEmpty()
-                    && confirmPassword == null || newPassword.isEmpty()) {
+            if (!AuthUtils.isValidPhone(phone)) {
+                request.setAttribute("phoneError", "Incorrect phone format! Please try again.");
+                request.setAttribute("phoneMessage", "Phone number must start with 09|08|07|05|03 and follow by 8 number!");
+                return EDIT_PAGE;
+            }
 
-            } else {
-                if (oldPassword == null || oldPassword.isEmpty()
-                        || newPassword == null || newPassword.isEmpty()
-                        || confirmPassword == null || newPassword.isEmpty()) {
-                    request.setAttribute("oldPasswordError", "Please enter your current password!");
-                    request.setAttribute("passwordError", "Please enter your new password!");
-                    request.setAttribute("confirmError", "Please enter confirm password!");
-                    request.setAttribute("isEdit", true);
-                    return PROFILE_PAGE;
-                }
-                if (!oldPassword.equals(account.getPassword())) {
-                    request.setAttribute("oldPasswordError", "Current password is incorrect!");
-                    request.setAttribute("isEdit", true);
-                    return PROFILE_PAGE;
-                }
-                if (oldPassword.equals(newPassword)) {
-                    request.setAttribute("passwordError", "New password must be different from current password!");
-                    request.setAttribute("isEdit", true);
-                    return PROFILE_PAGE;
-                }
-                if (!newPassword.equals(confirmPassword)) {
-                    request.setAttribute("passwordError", "New password and confirm password do not match!");
-                    request.setAttribute("isEdit", true);
-                    return PROFILE_PAGE;
-                }
-                passwordChanged = true;
-            }
             customer.setCustomerName(customerName);
             customer.setEmail(email);
             customer.setPhone(phone);
             customer.setAddress(address);
 
-            boolean isCustomerUpdated = customerDAO.create(customer);
-            boolean isPasswordChanged = true;
+            boolean isCustomerUpdated = customerDAO.update(customer);
 
-            if (passwordChanged) {
-                account.setPassword(newPassword);
-                isPasswordChanged = accountDAO.changePassword(account);
+            if (!isCustomerUpdated) {
+                request.setAttribute("updateError", "Failed to update profile. Please try again later.");
+                return EDIT_PAGE;
             }
 
-            String mess = "";
+            String mess = "Profile updated successfully!";
 
-            if (isCustomerUpdated) {
-                mess = "Profile updated successfully!";
-            }
-            if (passwordChanged) {
-                mess += "Password has been changed.";
-            }
             request.setAttribute("success", mess);
 
             Customer updatedCustomer = customerDAO.getById(account.getCustomerId());
             request.setAttribute("customer", updatedCustomer);
-            request.setAttribute("isEdit", false);
-            return PROFILE_PAGE;
+
+            HttpSession session = request.getSession();
+            session.setAttribute("customer", updatedCustomer);
+
+            return EDIT_PAGE;
         } catch (Exception e) {
             e.printStackTrace();
             request.setAttribute("error", "System error occurred. Please try again later.");
-            return LOGIN_PAGE;
+            return PROFILE_PAGE;
         }
     }
 
     private String handleProfileViewing(HttpServletRequest request, HttpServletResponse response) {
-        if (!AuthUtils.isLoggedin(request)) {
+        if (!AuthUtils.isLoggedIn(request)) {
             request.setAttribute("error", "Please login first!");
             return LOGIN_PAGE;
         }
@@ -425,15 +386,86 @@ public class UserController extends HttpServlet {
             return LOGIN_PAGE;
         }
 
-        CustomerDAO customerDAO = new CustomerDAO();
-        Customer customer = customerDAO.getById(account.getCustomerId());
+        try {
+            CustomerDAO customerDAO = new CustomerDAO();
+            Customer customer = customerDAO.getById(account.getCustomerId());
 
-        if (customer != null) {
-            request.setAttribute("account", account);
-            request.setAttribute("customer", customer);
-            request.setAttribute("isEdit", true);
-            return PROFILE_PAGE;
+            if (customer != null) {
+                request.setAttribute("account", account);
+                request.setAttribute("customer", customer);
+                return EDIT_PAGE;
+            } else {
+                request.setAttribute("error", "Customer information not found!");
+                return LOGIN_PAGE;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            request.setAttribute("error", "System error occurred. Please try again later.");
+            return LOGIN_PAGE;
         }
-        return handleProfileViewing(request, response);
+    }
+
+    private String handlePasswordChanging(HttpServletRequest request, HttpServletResponse response) {
+        CustomerAccount account = AuthUtils.getCurrentUser(request);
+        if (account == null) {
+            request.setAttribute("error", "Session expired. Please login again!");
+            return LOGIN_PAGE;
+        }
+        CustomerAccountDAO accountDAO = new CustomerAccountDAO();
+
+        String oldPassword = request.getParameter("oldPassword");
+        String newPassword = request.getParameter("newPassword");
+        String confirmPassword = request.getParameter("confirmPassword");
+
+        if (isNullOrEmpty(oldPassword)
+                && isNullOrEmpty(newPassword)
+                && isNullOrEmpty(confirmPassword)) {
+            request.setAttribute("passwordMessage", "All password fields are empty. No changes made.");
+            return EDIT_PAGE;
+        }
+        if (isNullOrEmpty(oldPassword)) {
+            request.setAttribute("oldPasswordError", "Please enter your current password!");
+            return EDIT_PAGE;
+        }
+        if (isNullOrEmpty(newPassword)) {
+            request.setAttribute("passwordError", "Please enter your new password!");
+            return EDIT_PAGE;
+        }
+        if (isNullOrEmpty(confirmPassword)) {
+            request.setAttribute("confirmError", "Please enter confirm password!");
+            return EDIT_PAGE;
+        }
+        if (!oldPassword.equals(account.getPassword())) {
+            request.setAttribute("oldPasswordError", "Current password is incorrect!");
+            return EDIT_PAGE;
+        }
+        if (oldPassword.equals(newPassword)) {
+            request.setAttribute("passwordError", "New password must be different from current password!");
+            return EDIT_PAGE;
+        }
+        if (!newPassword.equals(confirmPassword)) {
+            request.setAttribute("passwordError", "New password and confirm password do not match!");
+            return EDIT_PAGE;
+        }
+
+        try {
+            account.setPassword(newPassword);
+            boolean isPasswordChanged = accountDAO.changePassword(account);
+
+            if (!isPasswordChanged) {
+                request.setAttribute("changeError", "Failed to change password. Please try again later.");
+                return EDIT_PAGE;
+            }
+
+            HttpSession session = request.getSession();
+            session.setAttribute("account", account);
+            request.setAttribute("successChanging", "Password has been changed successfully!");
+            return EDIT_PAGE;
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            request.setAttribute("changeError", "System error occurred. Please try again later.");
+            return EDIT_PAGE;
+        }
     }
 }

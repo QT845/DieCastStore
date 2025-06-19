@@ -26,6 +26,8 @@ public class MainController extends HttpServlet {
                 || "register".equals(action)
                 || "updateProfile".equals(action)
                 || "viewProfile".equals(action)
+                || "editProfile".equals(action)
+                || "changePassword".equals(action)
                 || "showLogin".equals(action)
                 || "showRegister".equals(action);
     }

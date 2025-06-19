@@ -75,7 +75,7 @@ public class CustomerAccountDAO implements IDAO<CustomerAccount, String> {
         PreparedStatement st = null;
         try {
             c = DBUtils.getConnection();
-            st = c.prepareStatement(UPDATE);
+            st = c.prepareStatement(CHANGE_PASSWORD);
             st.setString(1, entity.getPassword());
             st.setString(2, entity.getCustomerId());
 

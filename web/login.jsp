@@ -7,7 +7,7 @@
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@page import="utils.AuthUtils" %>
 <%
-    if (AuthUtils.isLoggedin(request)) {
+    if (AuthUtils.isLoggedIn(request)) {
         response.sendRedirect("home.jsp");
         return;
     }

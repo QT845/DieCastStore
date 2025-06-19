@@ -36,7 +36,7 @@ public class AuthUtils {
         return null;
     } 
     
-    public static boolean isLoggedin(HttpServletRequest request) {
+    public static boolean isLoggedIn(HttpServletRequest request) {
         return getCurrentUser(request) != null;
     }
     
