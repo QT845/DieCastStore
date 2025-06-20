@@ -36,6 +36,15 @@ public class MainController extends HttpServlet {
                 || "detail".equals(action)
                 || "search".equals(action);
     }
+    
+    private boolean isCartAction(String action) {
+        return "add".equals(action)
+                || "view".equals(action)
+                || "remove".equals(action)
+                || "clear".equals(action)
+                || "update".equals(action)
+                || "checkout".equals(action);
+    }
 
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -48,6 +57,8 @@ public class MainController extends HttpServlet {
                     url = "/UserController";
                 } else if (isProductAction(action)) {
                     url = "/ProductController";
+                } else if (isCartAction(action)) {
+                    url = "/CartController";
                 } else {
                     request.setAttribute("message", "Invalid action: " + action);
                 }

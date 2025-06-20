@@ -148,9 +148,6 @@ public class ProductController extends HttpServlet {
         return "productSearch.jsp";
     }
 
-    private String handleAddToCart(HttpServletRequest request, HttpServletResponse response) {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
-    }
 
     private String handleDetails(HttpServletRequest request, HttpServletResponse response) {
         String url = "productDetail.jsp";
@@ -196,6 +193,10 @@ public class ProductController extends HttpServlet {
         ModelCarDAO dao = new ModelCarDAO();
         List<ModelCar> newProducts = dao.getLatestProducts(4);  // Lấy 4 sản phẩm mới
         request.setAttribute("productListNew", newProducts);
-        return "productCarousel.jsp";  // Trả về tên JSP chứ không forward tại đây
+        return "shop.jsp";  // Trả về tên JSP chứ không forward tại đây
+    }
+
+    private String handleAddToCart(HttpServletRequest request, HttpServletResponse response) {
+        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
     }
 }

@@ -331,6 +331,7 @@
             function setQuantity(hiddenInputId) {
                 const quantity = document.getElementById('quantityInput').value;
                 document.getElementById(hiddenInputId).value = quantity;
+                return true;
             }
 
             document.addEventListener('DOMContentLoaded', function () {
@@ -423,17 +424,27 @@
                         </div>
                     </div>
                     <div class="purchase-buttons" style="margin-top: 20px; display: flex; gap: 15px;">
-                        <form method="post" action="BuyNowServlet">
-                            <input type="hidden" name="modelId" value="<%= product.getModelId() %>">
-                            <input type="hidden" name="quantity" id="buyNowQuantity">
-                            <button type="submit" onclick="setQuantity('buyNowQuantity')" style="padding: 10px 20px; background-color: #ff5722; color: white; border: none; border-radius: 5px;">Buy Now</button>
+
+                        <form method="get" action="cart">
+                            <input type="hidden" name="action" value="add">
+                            <input type="hidden" name="itemId" value="<%= product.getModelId() %>">
+                            <input type="hidden" name="itemType" value="modelCar">
+                            <input type="hidden" name="unitPrice" value="<%= product.getPrice() %>">
+                            <input type="hidden" name="quantity" id="addToCartQuantity">
+                            <button type="submit" onclick="setQuantity('addToCartQuantity')">Add to Cart</button>
                         </form>
 
-                        <form method="post" action="AddToCartServlet">
-                            <input type="hidden" name="modelId" value="<%= product.getModelId() %>">
-                            <input type="hidden" name="quantity" id="addToCartQuantity">
-                            <button type="submit" onclick="setQuantity('addToCartQuantity')" style="padding: 10px 20px; background-color: #2196f3; color: white; border: none; border-radius: 5px;">Add to Cart</button>
+
+                        <form method="get" action="cart">
+                            <input type="hidden" name="action" value="buyNow">
+                            <input type="hidden" name="itemId" value="<%= product.getModelId() %>">
+                            <input type="hidden" name="itemType" value="modelCar">
+                            <input type="hidden" name="unitPrice" value="<%= product.getPrice() %>">
+                            <input type="hidden" name="quantity" id="buyNowQuantity">
+                            <button type="submit" onclick="setQuantity('buyNowQuantity')">Buy Now</button>
                         </form>
+
+
                     </div>
                     <% } %>
 
