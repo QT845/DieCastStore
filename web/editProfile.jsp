@@ -19,8 +19,6 @@
 
         <h1>Edit Profile</h1>
 
-
-
         <form action="MainController" method="POST">
             <input type="hidden" name="action" value="updateProfile">
 
