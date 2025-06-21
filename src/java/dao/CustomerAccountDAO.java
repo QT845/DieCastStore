@@ -4,6 +4,7 @@
  */
 package dao;
 
+import com.oracle.wls.shaded.org.apache.bcel.generic.ACONST_NULL;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -12,6 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 import model.CustomerAccount;
 import utils.DBUtils;
+import utils.PasswordUtils;
 
 /**
  *
@@ -37,7 +39,7 @@ public class CustomerAccountDAO implements IDAO<CustomerAccount, String> {
             st = c.prepareStatement(CREATE);
             st.setString(1, entity.getUserName());
             st.setString(2, entity.getCustomerId());
-            st.setString(3, entity.getPassword());
+            st.setString(3, PasswordUtils.encryptSHA256(entity.getPassword()));
             st.setInt(4, entity.getRole() != 0 ? entity.getRole() : 2);
 
             return st.executeUpdate() > 0;
@@ -76,7 +78,7 @@ public class CustomerAccountDAO implements IDAO<CustomerAccount, String> {
         try {
             c = DBUtils.getConnection();
             st = c.prepareStatement(CHANGE_PASSWORD);
-            st.setString(1, entity.getPassword());
+            st.setString(1, PasswordUtils.encryptSHA256(entity.getPassword()));
             st.setString(2, entity.getCustomerId());
 
             return st.executeUpdate() > 0;
@@ -204,9 +206,26 @@ public class CustomerAccountDAO implements IDAO<CustomerAccount, String> {
     public boolean login(String userName, String password) {
         CustomerAccount account = getByUserName(userName);
         if (account != null) {
-            if (account.getPassword().equals(password)) {
-                return true;
+            if (account.getRole() == 0) {
+                return false;
             }
+            return PasswordUtils.verifyPassword(password, account.getPassword());
+        }
+        return false;
+    }
+
+    public boolean isActiveUser(String customerId) {
+        CustomerAccount account = getById(customerId);
+        if (account != null) {
+            return account.getRole() != 0;
+        }
+        return false;
+    }
+    
+    public boolean isActiveUserByUserName(String userName) {
+        CustomerAccount account = getByUserName(userName);
+        if (account != null) {
+            return account.getRole() != 0;
         }
         return false;
     }

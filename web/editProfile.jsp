@@ -10,149 +10,420 @@
 <html>
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
         <title>Edit Profile</title>
+        <!-- Bootstrap CSS -->
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+        <!-- Custom CSS -->
+        <style>
+            :root {
+                --navy-blue: #2c3e50;
+                --light-pastel-blue: #a8cfd1;
+                --gray-teal: #5c7d7a;
+                --deep-sky-blue: #4a90e2;
+            }
+
+            body {
+                background: linear-gradient(135deg, var(--light-pastel-blue) 0%, #e8f4f8 100%);
+                min-height: 100vh;
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                padding: 2rem 0;
+            }
+
+            .edit-container {
+                max-width: 900px;
+                margin: 0 auto;
+                padding: 0 1rem;
+            }
+
+            .page-title {
+                text-align: center;
+                color: var(--navy-blue);
+                font-weight: 700;
+                font-size: 2.5rem;
+                margin-bottom: 2rem;
+                text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            }
+
+            .edit-card {
+                background: white;
+                border-radius: 15px;
+                box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+                overflow: hidden;
+                margin-bottom: 2rem;
+                border: 1px solid var(--light-pastel-blue);
+                transition: transform 0.3s ease, box-shadow 0.3s ease;
+            }
+
+            .edit-card:hover {
+                transform: translateY(-3px);
+                box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+            }
+
+            .card-header {
+                background: linear-gradient(135deg, var(--navy-blue) 0%, var(--gray-teal) 100%);
+                color: white;
+                padding: 1.5rem 2rem;
+                border: none;
+            }
+
+            .card-header h3 {
+                margin: 0;
+                font-weight: 600;
+                font-size: 1.4rem;
+            }
+
+            .card-body {
+                padding: 2rem;
+            }
+
+            .form-group {
+                margin-bottom: 1.5rem;
+            }
+
+            .form-label {
+                color: var(--navy-blue);
+                font-weight: 600;
+                margin-bottom: 0.5rem;
+                font-size: 0.95rem;
+            }
+
+            .required {
+                color: #dc3545;
+                font-weight: bold;
+            }
+
+            .form-control, .form-control:read-only {
+                border: 2px solid var(--light-pastel-blue);
+                border-radius: 10px;
+                padding: 12px 15px;
+                font-size: 1rem;
+                transition: all 0.3s ease;
+                background-color: #fafafa;
+            }
+
+            .form-control:read-only {
+                background-color: #f8f9fa;
+                color: var(--gray-teal);
+                cursor: not-allowed;
+            }
+
+            .form-control:focus {
+                border-color: var(--deep-sky-blue);
+                box-shadow: 0 0 0 0.2rem rgba(74, 144, 226, 0.25);
+                background-color: white;
+            }
+
+            .form-control::placeholder {
+                color: #999;
+                font-style: italic;
+            }
+
+            textarea.form-control {
+                resize: vertical;
+                min-height: 100px;
+            }
+
+            .alert {
+                border-radius: 10px;
+                margin-bottom: 1.5rem;
+                font-weight: 500;
+                box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            }
+
+            .alert-success {
+                background: linear-gradient(135deg, #e8f5e8 0%, #c8e6c9 100%);
+                border: 1px solid #4caf50;
+                color: #2e7d32;
+            }
+
+            .alert-danger {
+                background: linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%);
+                border: 1px solid #f44336;
+                color: #c62828;
+            }
+
+            .alert-info {
+                background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+                border: 1px solid #2196f3;
+                color: #1565c0;
+            }
+
+            .error-message {
+                color: #dc3545;
+                font-size: 0.875rem;
+                margin-top: 0.25rem;
+                font-weight: 500;
+            }
+
+            .btn-primary {
+                background: linear-gradient(135deg, var(--deep-sky-blue) 0%, #357abd 100%);
+                border: none;
+                color: white;
+                padding: 12px 25px;
+                border-radius: 25px;
+                font-weight: 600;
+                font-size: 1rem;
+                transition: all 0.3s ease;
+                box-shadow: 0 6px 20px rgba(74, 144, 226, 0.3);
+                min-width: 150px;
+            }
+
+            .btn-primary:hover {
+                background: linear-gradient(135deg, #357abd 0%, var(--deep-sky-blue) 100%);
+                transform: translateY(-2px);
+                box-shadow: 0 8px 25px rgba(74, 144, 226, 0.4);
+                color: white;
+            }
+
+            .btn-secondary {
+                background: linear-gradient(135deg, var(--gray-teal) 0%, #4a6b68 100%);
+                border: none;
+                color: white;
+                padding: 12px 25px;
+                border-radius: 25px;
+                font-weight: 600;
+                font-size: 1rem;
+                transition: all 0.3s ease;
+                box-shadow: 0 4px 15px rgba(92, 125, 122, 0.3);
+                min-width: 150px;
+            }
+
+            .btn-secondary:hover {
+                background: linear-gradient(135deg, #4a6b68 0%, var(--gray-teal) 100%);
+                transform: translateY(-2px);
+                box-shadow: 0 6px 20px rgba(92, 125, 122, 0.4);
+                color: white;
+            }
+
+            .btn:active {
+                transform: translateY(0) !important;
+            }
+
+            .btn-return {
+                background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+                border: none;
+                color: white;
+                padding: 10px 20px;
+                border-radius: 20px;
+                font-weight: 500;
+                transition: all 0.3s ease;
+                box-shadow: 0 4px 15px rgba(108, 117, 125, 0.3);
+                text-decoration: none;
+                display: inline-block;
+                margin-top: 2rem;
+            }
+
+            .btn-return:hover {
+                background: linear-gradient(135deg, #495057 0%, #6c757d 100%);
+                transform: translateY(-2px);
+                box-shadow: 0 6px 20px rgba(108, 117, 125, 0.4);
+                color: white;
+                text-decoration: none;
+            }
+
+            .return-section {
+                text-align: center;
+                margin-top: 2rem;
+            }
+
+            @media (max-width: 768px) {
+                body {
+                    padding: 1rem 0;
+                }
+                
+                .edit-container {
+                    padding: 0 0.5rem;
+                }
+                
+                .page-title {
+                    font-size: 2rem;
+                    margin-bottom: 1.5rem;
+                }
+                
+                .card-body {
+                    padding: 1.5rem;
+                }
+                
+                .btn-primary,
+                .btn-secondary {
+                    width: 100%;
+                    margin-bottom: 1rem;
+                }
+            }
+        </style>
     </head>
     <body>
         <c:if test="${empty sessionScope.account}">
             <c:redirect url="login.jsp"/>
         </c:if>
 
-        <h1>Edit Profile</h1>
+        <div class="edit-container">
+            <h1 class="page-title">Edit Profile</h1>
 
-        <form action="MainController" method="POST">
-            <input type="hidden" name="action" value="updateProfile">
-
-            <fieldset style="margin: 20px 0; padding: 15px;">
-                <legend><strong>Profile Information</strong></legend>
-                <c:if test="${not empty success}">
-                    <div style="color: green">
-                        <strong>${success}</strong> 
-                    </div>
-                </c:if>
-                <c:if test="${not empty error}">
-                    <div style="color: red">
-                        <strong>Error:</strong> ${error}
-                    </div>
-                </c:if>
-                <c:if test="${not empty updateError}">
-                    <div style="color: red">
-                        <strong>Update Error:</strong> ${updateError}
-                    </div>
-                </c:if>
-                <c:if test="${not empty changeError}">
-                    <div style="color: red">
-                        <strong>Password Change Error:</strong> ${changeError}
-                    </div>
-                </c:if>
-
-                <!-- Username (Read Only) -->
-                <div style="margin: 10px 0;">
-                    <label for="userName">Username <span style="color: red;">*</span></label><br>
-                    <input type="text" id="userName" name="userName" 
-                           value="${account.userName}" readonly 
-                           style="width: 200px; padding: 5px;"/>
+            <!-- Profile Information Section -->
+            <div class="edit-card">
+                <div class="card-header">
+                    <h3>Profile Information</h3>
                 </div>
-
-                <!-- Customer ID (Read Only) -->
-                <div style="margin: 10px 0;">
-                    <label for="customerId">Customer ID <span style="color: red;">*</span></label><br>
-                    <input type="text" id="customerId" name="customerId" 
-                           value="${account.customerId}" readonly 
-                           style="width: 200px; padding: 5px;"/>
-                </div>
-
-                <!-- Full Name -->
-                <div style="margin: 10px 0;">
-                    <label for="customerName">Full Name <span style="color: red;">*</span></label><br>
-                    <input type="text" id="customerName" name="customerName" 
-                           value="${not empty param.customerName ? param.customerName : customer.customerName}" required/>
-                    <c:if test="${not empty nameError}">
-                        <div style="color: red; font-size: 12px;">${nameError}</div>
+                <div class="card-body">
+                    <!-- Success and Error Messages -->
+                    <c:if test="${not empty success}">
+                        <div class="alert alert-success">
+                            ${success}
+                        </div>
                     </c:if>
-                </div>
-
-                <!-- Email -->
-                <div style="margin: 10px 0;">
-                    <label for="email">Email <span style="color: red;">*</span></label><br>
-                    <input type="email" id="email" name="email" 
-                           value="${not empty param.email ? param.email : customer.email}" required/>
-                    <c:if test="${not empty emailError}">
-                        <div style="color: red; font-size: 12px;">${emailError}</div>
+                    <c:if test="${not empty error}">
+                        <div class="alert alert-danger">
+                            <strong>Error:</strong> ${error}
+                        </div>
                     </c:if>
-                </div>
-
-                <!-- Phone -->
-                <div style="margin: 10px 0;">
-                    <label for="phone">Phone <span style="color: red;">*</span></label><br>
-                    <input type="tel" id="phone" name="phone" 
-                           value="${not empty param.phone ? param.phone : customer.phone}" required/>
-                    <c:if test="${not empty phoneError}">
-                        <div style="color: red; font-size: 12px;">${phoneError}</div>
+                    <c:if test="${not empty updateError}">
+                        <div class="alert alert-danger">
+                            <strong>Update Error:</strong> ${updateError}
+                        </div>
                     </c:if>
-                    <c:if test="${not empty phoneMessage}">
-                        <div style="color: blue; font-size: 12px;">${phoneMessage}</div>
+                    <c:if test="${not empty changeError}">
+                        <div class="alert alert-danger">
+                            <strong>Password Change Error:</strong> ${changeError}
+                        </div>
                     </c:if>
-                </div>
 
-                <!-- Address -->
-                <div style="margin: 10px 0;">
-                    <label for="address">Address <span style="color: red;">*</span></label><br>
-                    <textarea id="address" name="address" rows="3" required 
-                              style="width: 400px; padding: 5px;">${not empty param.address ? param.address : customer.address}</textarea>
-                    <c:if test="${not empty addressError}">
-                        <div style="color: red; font-size: 12px; margin-top: 5px;">${addressError}</div>
+                    <form action="MainController" method="POST">
+                        <input type="hidden" name="action" value="updateProfile">
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <!-- Username (Read Only) -->
+                                <div class="form-group">
+                                    <label for="userName" class="form-label">Username <span class="required">*</span></label>
+                                    <input type="text" class="form-control" id="userName" name="userName" 
+                                           value="${account.userName}" readonly/>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <!-- Customer ID (Read Only) -->
+                                <div class="form-group">
+                                    <label for="customerId" class="form-label">Customer ID <span class="required">*</span></label>
+                                    <input type="text" class="form-control" id="customerId" name="customerId" 
+                                           value="${account.customerId}" readonly/>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Full Name -->
+                        <div class="form-group">
+                            <label for="customerName" class="form-label">Full Name <span class="required">*</span></label>
+                            <input type="text" class="form-control" id="customerName" name="customerName" 
+                                   value="${not empty param.customerName ? param.customerName : customer.customerName}" required/>
+                            <c:if test="${not empty nameError}">
+                                <div class="error-message">${nameError}</div>
+                            </c:if>
+                        </div>
+
+                        <!-- Email -->
+                        <div class="form-group">
+                            <label for="email" class="form-label">Email <span class="required">*</span></label>
+                            <input type="email" class="form-control" id="email" name="email" 
+                                   value="${not empty param.email ? param.email : customer.email}" required/>
+                            <c:if test="${not empty emailError}">
+                                <div class="error-message">${emailError}</div>
+                            </c:if>
+                        </div>
+
+                        <!-- Phone -->
+                        <div class="form-group">
+                            <label for="phone" class="form-label">Phone <span class="required">*</span></label>
+                            <input type="tel" class="form-control" id="phone" name="phone" 
+                                   value="${not empty param.phone ? param.phone : customer.phone}" required/>
+                            <c:if test="${not empty phoneError}">
+                                <div class="error-message">${phoneError}</div>
+                            </c:if>
+                            <c:if test="${not empty phoneMessage}">
+                                <div class="alert alert-info mt-2">
+                                    ${phoneMessage}
+                                </div>
+                            </c:if>
+                        </div>
+
+                        <!-- Address -->
+                        <div class="form-group">
+                            <label for="address" class="form-label">Address <span class="required">*</span></label>
+                            <textarea class="form-control" id="address" name="address" rows="3" required>${not empty param.address ? param.address : customer.address}</textarea>
+                            <c:if test="${not empty addressError}">
+                                <div class="error-message">${addressError}</div>
+                            </c:if>
+                        </div>
+
+                        <!-- Action Button -->
+                        <div class="text-center">
+                            <button type="submit" class="btn btn-primary">Update Profile</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Password Change Section -->
+            <div class="edit-card">
+                <div class="card-header">
+                    <h3>Change Password</h3>
+                </div>
+                <div class="card-body">
+                    <!-- Password Change Messages -->
+                    <c:if test="${not empty successChanging}">
+                        <div class="alert alert-success">
+                            ${successChanging}
+                        </div>
                     </c:if>
-                </div>
-                <!-- Action Buttons for Update Profile -->
-                <input type="submit" value="Update Profile">
-            </fieldset>
-
-        </form>
-
-
-        <!-- Password change section -->
-        <form action="MainController" method="POST">
-            <input type="hidden" name="action" value="changePassword">
-
-            <fieldset style="margin: 20px 0; padding: 15px;">
-                <legend><strong>Change Password</strong></legend>
-                <c:if test="${not empty successChanging}">
-                    <div style="color: green">
-                        <strong>${successChanging}</strong> 
-                    </div>
-                </c:if>
-                <c:if test="${not empty passwordMessage}">
-                    <div style="color: blue">
-                        <strong>${passwordMessage}</strong> 
-                    </div>
-                </c:if>
-
-                <div style="margin: 10px 0;">
-                    <label for="oldPassword">Current Password</label><br>
-                    <input type="password" id="oldPassword" name="oldPassword" style="width: 200px; padding: 5px;"/>
-                    <c:if test="${not empty oldPasswordError}">
-                        <div style="color: red; font-size: 12px;">${oldPasswordError}</div>
+                    <c:if test="${not empty passwordMessage}">
+                        <div class="alert alert-info">
+                            ${passwordMessage}
+                        </div>
                     </c:if>
-                </div>
 
-                <div style="margin: 10px 0;">
-                    <label for="newPassword">New Password</label><br>
-                    <input type="password" id="newPassword" name="newPassword" style="width: 200px; padding: 5px;"/>
-                    <c:if test="${not empty passwordError}">
-                        <div style="color: red; font-size: 12px;">${passwordError}</div>
-                    </c:if>
-                </div>
+                    <form action="MainController" method="POST">
+                        <input type="hidden" name="action" value="changePassword">
 
-                <div style="margin: 10px 0;">
-                    <label for="confirmPassword">Confirm New Password</label><br>
-                    <input type="password" id="confirmPassword" name="confirmPassword" style="width: 200px; padding: 5px;"/>
-                    <c:if test="${not empty confirmError}">
-                        <div style="color: red; font-size: 12px;">${confirmError}</div>
-                    </c:if>
+                        <div class="form-group">
+                            <label for="oldPassword" class="form-label">Current Password</label>
+                            <input type="password" class="form-control" id="oldPassword" name="oldPassword"/>
+                            <c:if test="${not empty oldPasswordError}">
+                                <div class="error-message">${oldPasswordError}</div>
+                            </c:if>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="newPassword" class="form-label">New Password</label>
+                            <input type="password" class="form-control" id="newPassword" name="newPassword"/>
+                            <c:if test="${not empty passwordError}">
+                                <div class="error-message">${passwordError}</div>
+                            </c:if>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="confirmPassword" class="form-label">Confirm New Password</label>
+                            <input type="password" class="form-control" id="confirmPassword" name="confirmPassword"/>
+                            <c:if test="${not empty confirmError}">
+                                <div class="error-message">${confirmError}</div>
+                            </c:if>
+                        </div>
+
+                        <!-- Action Button -->
+                        <div class="text-center">
+                            <button type="submit" class="btn btn-secondary">Change Password</button>
+                        </div>
+                    </form>
                 </div>
-                <input type="submit" value="Change Password">
-            </fieldset>
-        </form>
-        <input type="button" value="Return to Profile" onclick="window.location.href = 'MainController?action=viewProfile'">
+            </div>
+
+            <!-- Return Button -->
+            <div class="return-section">
+                <a href="MainController?action=viewProfile" class="btn-return">Return to Profile</a>
+            </div>
+        </div>
+        
+        <!-- Bootstrap JS -->
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     </body>
 </html>

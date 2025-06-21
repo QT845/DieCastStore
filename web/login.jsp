@@ -3,56 +3,261 @@
     Created on : Jun 14, 2025, 2:51:18 PM
     Author     : hqthi
 --%>
-
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
-<%@page import="utils.AuthUtils" %>
-<%
-    if (AuthUtils.isLoggedIn(request)) {
-        response.sendRedirect("home.jsp");
-        return;
-    }
-%>
+<%@taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <!DOCTYPE html>
 <html>
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
         <title>Login Page</title>
+        <!-- Bootstrap CSS -->
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+        <!-- Custom CSS -->
+        <style>
+            :root {
+                --navy-blue: #2c3e50;
+                --light-pastel-blue: #a8cfd1;
+                --gray-teal: #5c7d7a;
+                --deep-sky-blue: #4a90e2;
+            }
+
+            body {
+                background: linear-gradient(135deg, var(--light-pastel-blue) 0%, #e8f4f8 100%);
+                min-height: 100vh;
+                display: flex;
+                align-items: center;
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            }
+
+            .login-container {
+                width: 100%;
+                max-width: 450px;
+                margin: 0 auto;
+                padding: 2rem;
+            }
+
+            .login-card {
+                background: white;
+                border-radius: 20px;
+                box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+                overflow: hidden;
+                border: 1px solid var(--light-pastel-blue);
+                transition: transform 0.3s ease;
+            }
+
+            .login-card:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+            }
+
+            .login-header {
+                background: linear-gradient(135deg, var(--navy-blue) 0%, var(--gray-teal) 100%);
+                padding: 2.5rem 2rem;
+                text-align: center;
+                color: white;
+            }
+
+            .login-title {
+                font-size: 2rem;
+                font-weight: 700;
+                margin: 0;
+                text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            }
+
+            .login-body {
+                padding: 2.5rem 2rem;
+            }
+
+            .form-group {
+                margin-bottom: 1.5rem;
+            }
+
+            .form-label {
+                color: var(--navy-blue);
+                font-weight: 600;
+                margin-bottom: 0.5rem;
+                font-size: 0.95rem;
+            }
+
+            .form-control {
+                border: 2px solid var(--light-pastel-blue);
+                border-radius: 10px;
+                padding: 12px 15px;
+                font-size: 1rem;
+                transition: all 0.3s ease;
+                background-color: #fafafa;
+            }
+
+            .form-control:focus {
+                border-color: var(--deep-sky-blue);
+                box-shadow: 0 0 0 0.2rem rgba(74, 144, 226, 0.25);
+                background-color: white;
+            }
+
+            .form-control::placeholder {
+                color: #999;
+                font-style: italic;
+            }
+
+            .error-alert {
+                background: linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%);
+                border: 1px solid #f44336;
+                color: #c62828;
+                padding: 1rem;
+                border-radius: 10px;
+                margin-bottom: 1.5rem;
+                font-weight: 500;
+                box-shadow: 0 4px 15px rgba(244, 67, 54, 0.1);
+            }
+
+            .btn-login {
+                width: 100%;
+                margin-bottom: 1.5rem;
+            }
+
+            .btn-signin {
+                background: linear-gradient(135deg, var(--deep-sky-blue) 0%, #357abd 100%);
+                border: none;
+                color: white;
+                padding: 12px 25px;
+                border-radius: 25px;
+                font-weight: 600;
+                font-size: 1.1rem;
+                width: 100%;
+                transition: all 0.3s ease;
+                box-shadow: 0 6px 20px rgba(74, 144, 226, 0.3);
+            }
+
+            .btn-signin:hover {
+                background: linear-gradient(135deg, #357abd 0%, var(--deep-sky-blue) 100%);
+                transform: translateY(-2px);
+                box-shadow: 0 8px 25px rgba(74, 144, 226, 0.4);
+                color: white;
+            }
+
+            .btn-signin:active {
+                transform: translateY(0);
+            }
+
+            .btn-register {
+                background: linear-gradient(135deg, var(--gray-teal) 0%, #4a6b68 100%);
+                border: none;
+                color: white;
+                padding: 10px 25px;
+                border-radius: 20px;
+                font-weight: 500;
+                width: 100%;
+                transition: all 0.3s ease;
+                box-shadow: 0 4px 15px rgba(92, 125, 122, 0.3);
+            }
+
+            .btn-register:hover {
+                background: linear-gradient(135deg, #4a6b68 0%, var(--gray-teal) 100%);
+                transform: translateY(-2px);
+                box-shadow: 0 6px 20px rgba(92, 125, 122, 0.4);
+                color: white;
+            }
+
+            .register-section {
+                text-align: center;
+                padding-top: 1rem;
+                border-top: 1px solid #eee;
+            }
+
+            .register-text {
+                color: var(--gray-teal);
+                margin-bottom: 1rem;
+                font-size: 0.95rem;
+            }
+
+            @media (max-width: 480px) {
+                .login-container {
+                    padding: 1rem;
+                }
+                
+                .login-header {
+                    padding: 2rem 1.5rem;
+                }
+                
+                .login-title {
+                    font-size: 1.7rem;
+                }
+                
+                .login-body {
+                    padding: 2rem 1.5rem;
+                }
+            }
+        </style>
     </head>
     <body>
-        <h1>Sign in</h1>
-        <h2>Welcome back! Please sign in to your account</h2>
-        <%
-        String msg = (String) request.getAttribute("message");
-        %>
-        <% if (msg != null && !msg.isEmpty()) { %>
-        <%= msg %>
-        <% } %>
-        <form action="UserController" method="post">
-            <div class="form-group">
-                <label for="userName">User Name</label>
-                <input type="text" id="userName" name="userName" placeholder="Enter User Name" required/>
-            </div>
-            <div class="form-group">
-                <label for="password">Password</label>
-                <div style="position: relative;">
-                    <input type="password" id="password" name="password" placeholder="Enter Password" required style="padding-right: 40px;"/>
-                    <button type="button" onclick="togglePassword()" style="position:absolute; right:10px; top:50%; transform:translateY(-50%); border:none; background:none; cursor:pointer; color:#388e3c;">👁</button>
+        <c:if test="${not empty sessionScope.account}">
+            <c:redirect url="home.jsp"/>
+        </c:if>
+        
+        <div class="login-container">
+            <div class="login-card">
+                <div class="login-header">
+                    <h1 class="login-title">Sign In</h1>
+                </div>
+                
+                <div class="login-body">
+                    <!-- Error Messages -->
+                    <c:if test="${not empty ban}">
+                        <div class="error-alert">
+                            <strong>${ban}</strong>
+                        </div>
+                    </c:if>
+                    <c:if test="${not empty message}">
+                        <div class="error-alert">
+                            <strong>${message}</strong>
+                        </div>
+                    </c:if>
+                    
+                    <!-- Login Form -->
+                    <form action="UserController" method="post">
+                        <div class="form-group">
+                            <label for="userName" class="form-label">User Name</label>
+                            <input type="text" 
+                                   class="form-control" 
+                                   id="userName" 
+                                   name="userName" 
+                                   placeholder="Enter User Name" 
+                                   required
+                                   value="${param.userName}"/>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="password" class="form-label">Password</label>
+                            <input type="password" 
+                                   class="form-control" 
+                                   id="password" 
+                                   name="password" 
+                                   placeholder="Enter Password" 
+                                   required/>
+                        </div>
+                        
+                        <div class="btn-login">
+                            <button type="submit" name="action" value="login" class="btn-signin">
+                                Sign In
+                            </button>
+                        </div>
+                    </form>
+                    
+                    <!-- Register Section -->
+                    <div class="register-section">
+                        <p class="register-text">Don't have an account?</p>
+                        <form action="UserController" method="get">
+                            <button type="submit" name="action" value="register" class="btn-register">
+                                Create Account
+                            </button>
+                        </form>
+                    </div>
                 </div>
             </div>
-            <div class="remember-password">
-                <input type="checkbox" id="remember" name="remember" value="On"/>
-                <label for="remember">Remember password</label>
-            </div>
-            <div class="forgot-password">
-                <a href="#">Forgot Password</a>
-            </div>
-            <div class="btn-login">
-                <button type="submit" name="action" value="login">Sign In</button>
-            </div>
-        </form>
-
-        <form action="UserController" method="get">
-            <button type="submit" name="action" value="showRegister">Register</button>
-        </form>
+        </div>
+        
+        <!-- Bootstrap JS -->
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     </body>
 </html>

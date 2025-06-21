@@ -15,6 +15,7 @@
         <a href="login.jsp">login</a>
         <a href="register.jsp">register</a>
         <a href="profileForm.jsp">View Profile</a>
+        <a href="MainController?action=logout">log Out</a>
         <h1>hello</h1>
     </body>
 </html>

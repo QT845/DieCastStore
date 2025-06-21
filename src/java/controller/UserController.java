@@ -16,6 +16,7 @@ import jakarta.servlet.http.HttpSession;
 import model.Customer;
 import model.CustomerAccount;
 import utils.AuthUtils;
+import utils.PasswordUtils;
 
 /**
  *
@@ -135,11 +136,21 @@ public class UserController extends HttpServlet {
         }
 
         try {
+            if(!accountDAO.isActiveUserByUserName(userName)) {
+                CustomerAccount temp = accountDAO.getByUserName(userName);
+                if(temp != null && temp.getRole() == 0) {
+                    request.setAttribute("ban", "Your account has been banned. Please contact administrator!");
+                    return LOGIN_PAGE;
+                } 
+            }
+            
             if (accountDAO.login(userName, password)) {
                 CustomerAccount account = accountDAO.getByUserName(userName);
 
                 if (account != null) {
                     Customer customer = customerDAO.getById(account.getCustomerId());
+                    
+                    
 
                     if (customer != null) {
                         session.setAttribute("account", account);
@@ -435,7 +446,7 @@ public class UserController extends HttpServlet {
             request.setAttribute("confirmError", "Please enter confirm password!");
             return EDIT_PAGE;
         }
-        if (!oldPassword.equals(account.getPassword())) {
+        if (!PasswordUtils.verifyPassword(oldPassword, account.getPassword())) {
             request.setAttribute("oldPasswordError", "Current password is incorrect!");
             return EDIT_PAGE;
         }
@@ -457,6 +468,7 @@ public class UserController extends HttpServlet {
                 return EDIT_PAGE;
             }
 
+            account.setPassword(PasswordUtils.encryptSHA256(newPassword));
             HttpSession session = request.getSession();
             session.setAttribute("account", account);
             request.setAttribute("successChanging", "Password has been changed successfully!");
