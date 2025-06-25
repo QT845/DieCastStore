@@ -136,28 +136,23 @@ public class UserController extends HttpServlet {
         }
 
         try {
-            if(!accountDAO.isActiveUserByUserName(userName)) {
+            if (!accountDAO.isActiveUserByUserName(userName)) {
                 CustomerAccount temp = accountDAO.getByUserName(userName);
-                if(temp != null && temp.getRole() == 0) {
+                if (temp != null && temp.getRole() == 0) {
                     request.setAttribute("ban", "Your account has been banned. Please contact administrator!");
                     return LOGIN_PAGE;
-                } 
+                }
             }
-            
+
             if (accountDAO.login(userName, password)) {
                 CustomerAccount account = accountDAO.getByUserName(userName);
 
                 if (account != null) {
                     Customer customer = customerDAO.getById(account.getCustomerId());
-                    
-                    
 
                     if (customer != null) {
                         session.setAttribute("account", account);
                         session.setAttribute("customer", customer);
-                        session.setAttribute("userName", account.getUserName());
-                        session.setAttribute("customerId", account.getCustomerId());
-                        session.setAttribute("role", account.getRole());
 
                         return WELCOME_PAGE;
                     } else {
