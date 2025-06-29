@@ -1,87 +1,128 @@
-<%@ page contentType="text/html;charset=UTF-8" language="java" %>
-<%@ page import="model.Order" %>
-<%@ page import="model.OrderDetail" %>
-<%@ page import="java.util.List" %>
-<%
-    Order cart = (Order) request.getAttribute("cart");
-    String message = (String) request.getAttribute("message");
-%>
+<%@page contentType="text/html" pageEncoding="UTF-8"%>
+<%@page import="model.Cart"%>
+<%@page import="model.CartItem"%>
+<%@page import="java.util.List"%>
+<!DOCTYPE html>
 <html>
     <head>
-        <title>Giỏ Hàng</title>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <title>Cart</title>
     </head>
     <body>
-        <h2>Giỏ hàng của bạn</h2>
+        <h1>My cart</h1>
 
-        <% if (message != null) { %>
-        <p style="color:red;"><%= message %></p>
-        <% } %>
+        <%
+            // Lấy cart từ request attribute
+            Cart cart = (Cart) request.getAttribute("cart");
+        
+            // Hiển thị thông báo lỗi nếu có
+            String error = (String) request.getAttribute("error");
+            if (error != null) {
+        %>
+        <div style="color: red; margin-bottom: 10px;">
+            <strong>Lỗi: </strong><%= error %>
+        </div>
+        <%
+            }
+        
+            // Hiển thị thông báo thành công nếu có
+            String success = (String) request.getAttribute("success");
+            if (success != null) {
+        %>
+        <div style="color: green; margin-bottom: 10px;">
+            <strong>Succeed: </strong><%= success %>
+        </div>
+        <%
+            }
+        
+            // Kiểm tra giỏ hàng có trống không
+            if (cart == null || cart.isEmpty()) {
+        %>
+        <div>
+            <h3>Your cart is empty</h3>
+            <p><a href="productList.jsp">Continue shopping</a></p>
+        </div>
+        <%
+            } else {
+                List<CartItem> items = cart.getItems();
+        %>
+        <div>
+            <p>Total products: <strong><%= cart.getTotalQuantity() %></strong></p>
+            <p>Total amount: <strong><%= String.format("%.2f", cart.getTotalAmount()) %> $</strong></p>
+        </div>
 
-        <% if (cart == null || cart.getOrderDetails() == null || cart.getOrderDetails().isEmpty()) { %>
-        <p>Không có sản phẩm nào trong giỏ hàng.</p>
-        <% } else { %>
-        <table border="1">
-            <tr>
-                <th>STT</th>
-                <th>Loại</th>
-                <th>Mã sản phẩm</th>
-                <th>Giá</th>
-                <th>Số lượng</th>
-                <th>Tổng</th>
-                <th>Hành động</th>
-            </tr>
-            <%
-                List<OrderDetail> list = cart.getOrderDetails();
-                int index = 1;
-                double total = 0;
-                for (OrderDetail d : list) {
-                    double lineTotal = d.getUnitPrice() * d.getUnitQuantity();
-                    total += lineTotal;
-            %>
-            <tr>
-                <td><%= index++ %></td>
-                <td><%= d.getItemType() %></td>
-                <td><%= d.getItemId() %></td>
-                <td><%= d.getUnitPrice() %></td>
-                <td><%= d.getUnitQuantity() %></td>
-                <td><%= lineTotal %></td>
-                <td>
-                    <form action="cart" method="post" style="display:inline;">
-                        <input type="hidden" name="action" value="remove">
-                        <input type="hidden" name="orderId" value="<%= d.getOrderId() %>">
-                        <input type="hidden" name="itemType" value="<%= d.getItemType() %>">
-                        <input type="hidden" name="itemId" value="<%= d.getItemId() %>">
-                        <input type="submit" value="Xoá">
-                    </form>
-                    <form action="cart" method="post" style="display:inline;">
-                        <input type="hidden" name="action" value="update">
-                        <input type="hidden" name="orderId" value="<%= d.getOrderId() %>">
-                        <input type="hidden" name="itemType" value="<%= d.getItemType() %>">
-                        <input type="hidden" name="itemId" value="<%= d.getItemId() %>">
-                        <input type="number" name="quantity" value="<%= d.getUnitQuantity() %>" min="1">
-                        <input type="submit" value="Cập nhật">
-                    </form>
-                </td>
-            </tr>
-            <% } %>
-            <tr>
-                <td colspan="5" align="right"><strong>Tổng cộng:</strong></td>
-                <td colspan="2"><%= total %></td>
-            </tr>
+        <table border="1" cellpadding="5" cellspacing="0" width="100%">
+            <thead>
+                <tr>
+                    <th>No.</th>
+                    <th>Product Name</th>
+                    <th>Type</th>
+                    <th>Unit price</th>
+                    <th>Quantity</th>
+                    <th>Total amount</th>
+                    <th>Active</th>
+                </tr>
+            </thead>
+            <tbody>
+                <%
+                    int index = 1;
+                    for (CartItem item : items) {
+                %>
+                <tr>
+                    <td><%= index++ %></td>
+                    <td><%= item.getItemName() %></td>
+                    <td>
+                        <%= "MODEL".equals(item.getItemType()) ? "Mô hình xe" : "Phụ kiện" %>
+                    </td>
+                    <td><%= String.format("%.2f", item.getUnitPrice()) %> $</td>
+                    <td>
+                        <!-- Form cập nhật số lượng -->
+                        <form action="cart" method="post" style="display: inline;">
+                            <input type="hidden" name="action" value="update">
+                            <input type="hidden" name="itemType" value="<%= item.getItemType() %>">
+                            <input type="hidden" name="itemId" value="<%= item.getItemId() %>">
+                            <input type="number" name="quantity" value="<%= item.getQuantity() %>" 
+                                   min="1" max="100" style="width: 60px;">
+                            <input type="submit" value="Update">
+                        </form>
+                    </td>
+                    <td><%= String.format("%.2f", item.getSubTotal()) %> $</td>
+                    <td>
+                        <!-- Nút xóa sản phẩm -->
+                        <a href="cart?action=remove&itemType=<%= item.getItemType() %>&itemId=<%= item.getItemId() %>"
+                           onclick="return confirm('Bạn có chắc muốn xóa sản phẩm này?')">
+                            Delete
+                        </a>
+                    </td>
+                </tr>
+                <%
+                    }
+                %>
+            </tbody>
         </table>
 
-        <form action="cart" method="post">
-            <input type="hidden" name="action" value="clear">
-            <input type="submit" value="Xoá tất cả">
-        </form>
+        <div style="margin-top: 20px;">
+            <h3>Total: <%= String.format("%.2f", cart.getTotalAmount()) %> $</h3>
+        </div>
 
-        <form action="cart" method="post">
-            <input type="hidden" name="action" value="checkout">
-            <input type="submit" value="Thanh toán">
-        </form>
-        <% } %>
+        <div style="margin-top: 20px;">
+            <a href="cart?action=clear" 
+               onclick="return confirm('Bạn có chắc muốn xóa toàn bộ giỏ hàng?')"
+               style="color: red;">
+                Clear entire cart
+            </a>
+            &nbsp;&nbsp;|&nbsp;&nbsp;
+            <a href="productList.jsp">Continue shopping</a>
+            &nbsp;&nbsp;|&nbsp;&nbsp;
+            <a href="cart?action=checkout" style="background-color: #4CAF50; color: white; padding: 10px 20px; text-decoration: none;">
+                Pay
+            </a>
+        </div>
+        <%
+            }
+        %>
 
-        <a href="shop.jsp">Tiếp tục mua sắm</a>
-
+        <br><br>
+        <a href="home.jsp">Back to home page</a>
     </body>
 </html>

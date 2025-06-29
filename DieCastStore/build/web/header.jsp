@@ -237,7 +237,7 @@
                 </div>
                 <div class="dropdown-menu" id="dropdownMenu">
                     <a href="editProfile.jsp" class="edit">Edit Profile</a>
-                    <a href="cart.jsp" class="cart">Cart</a>
+                    <a href="cart" class="cart">Cart</a>
                     <a href="paymentMethods.jsp" class="payment">Payment Methods</a>
                     <a href="UserController?action=logout" class="logout">Logout</a>
                 </div>

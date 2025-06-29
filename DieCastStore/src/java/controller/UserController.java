@@ -4,6 +4,7 @@
  */
 package controller;
 
+import dao.CartDAO;
 import dao.CustomerAccountDAO;
 import dao.CustomerDAO;
 import java.io.IOException;
@@ -13,6 +14,8 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+import model.Cart;
+import model.CartItem;
 import model.Customer;
 import model.CustomerAccount;
 
@@ -25,6 +28,8 @@ public class UserController extends HttpServlet {
 
     private static final String WELCOME_PAGE = "home.jsp";
     private static final String LOGIN_PAGE = "login.jsp";
+
+    private CartDAO cartDAO = new CartDAO();
 
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -133,6 +138,21 @@ public class UserController extends HttpServlet {
                     // Đăng nhập thành công
                     url = WELCOME_PAGE;
                     session.setAttribute("user", loginResult);
+                    // LOAD CART TỪ DATABASE
+                    Cart savedCart = cartDAO.getCartByCustomerId(loginResult.getCustomerId());
+                    Cart sessionCart = (Cart) session.getAttribute("cart");
+                    // Merge cart từ database với cart hiện tại trong session (nếu có)
+                    if (sessionCart != null && !sessionCart.getItems().isEmpty()) {
+                        // Có cart trong session (guest cart) -> merge với saved cart
+                        for (CartItem item : sessionCart.getItems()) {
+                            savedCart.addItem(item.getItemType(), item.getItemId(),
+                                    item.getItemName(), item.getUnitPrice(), item.getQuantity());
+                        }
+                        // Lưu merged cart vào database
+                        cartDAO.saveCart(loginResult.getCustomerId(), savedCart);
+                    }
+                    // Set cart vào session
+                    session.setAttribute("cart", savedCart);
                 } else {
                     // Mật khẩu sai
                     url = LOGIN_PAGE;
@@ -212,9 +232,17 @@ public class UserController extends HttpServlet {
 
     private String handleLogout(HttpServletRequest request, HttpServletResponse response) {
         HttpSession session = request.getSession(false);
-        if (session != null) {
-            session.invalidate();
+        CustomerAccount user = (CustomerAccount) session.getAttribute("user");
+        if (user != null) {
+            Cart cart = (Cart) session.getAttribute("cart");
+            if (cart != null) {
+                // Lưu cart vào database
+                cartDAO.saveCart(user.getCustomerId(), cart);
+            }
         }
+
+        // Xóa session
+        session.invalidate();
         return "home.jsp";
     }
 

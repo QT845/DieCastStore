@@ -424,28 +424,22 @@
                         </div>
                     </div>
                     <div class="purchase-buttons" style="margin-top: 20px; display: flex; gap: 15px;">
-
-                        <form method="get" action="cart">
-                            <input type="hidden" name="action" value="add">
-                            <input type="hidden" name="itemId" value="<%= product.getModelId() %>">
-                            <input type="hidden" name="itemType" value="modelCar">
-                            <input type="hidden" name="unitPrice" value="<%= product.getPrice() %>">
-                            <input type="hidden" name="quantity" id="addToCartQuantity">
-                            <button type="submit" onclick="setQuantity('addToCartQuantity')">Add to Cart</button>
-                        </form>
-
-
-                        <form method="get" action="cart">
+                        <form method="post" action="cart">
                             <input type="hidden" name="action" value="buyNow">
                             <input type="hidden" name="itemId" value="<%= product.getModelId() %>">
-                            <input type="hidden" name="itemType" value="modelCar">
-                            <input type="hidden" name="unitPrice" value="<%= product.getPrice() %>">
+                            <input type="hidden" name="itemType" value="MODEL">
                             <input type="hidden" name="quantity" id="buyNowQuantity">
-                            <button type="submit" onclick="setQuantity('buyNowQuantity')">Buy Now</button>
+                            <button type="submit" onclick="setQuantity('buyNowQuantity')" style="padding: 10px 20px; background-color: #ff5722; color: white; border: none; border-radius: 5px;">Buy Now</button>
                         </form>
 
-
-                    </div>
+                        <form method="post" action="cart">
+                            <input type="hidden" name="action" value="add">
+                            <input type="hidden" name="itemId" value="<%= product.getModelId() %>">
+                            <input type="hidden" name="itemType" value="MODEL">
+                            <input type="hidden" name="quantity" id="addToCartQuantity">
+                            <button type="submit" onclick="setQuantity('addToCartQuantity')" style="padding: 10px 20px; background-color: #2196f3; color: white; border: none; border-radius: 5px;">Add to Cart</button>
+                        </form>
+                    </div>  
                     <% } %>
 
                     <!-- Special Offers -->
