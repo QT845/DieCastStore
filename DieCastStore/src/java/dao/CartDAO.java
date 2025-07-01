@@ -42,7 +42,7 @@ public class CartDAO {
         return cart;
     }
     
-    // Lưu/cập nhật một item trong cart (SQL Server MERGE)
+    // Lưu/cập nhật một item trong cart (SQL Server MERGE(vừa update vừa insert))
     public boolean saveCartItem(String customerId, CartItem item) {
         String sql = "MERGE customer_cart AS target " +
                     "USING (VALUES (?, ?, ?, ?, ?, ?)) AS source " +

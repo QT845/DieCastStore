@@ -14,9 +14,10 @@ public class CartItem {
     private String itemName;
     private double unitPrice;
     private int quantity;
+    private boolean selected;
     
     public CartItem(){
-        
+        this.selected = false;
     }
     
     public CartItem(String itemType, String itemId, String itemName, double unitPrice, int quantity){
@@ -25,6 +26,7 @@ public class CartItem {
         this.itemName = itemName;
         this.unitPrice = unitPrice; 
         this.quantity = quantity;
+        this.selected = false;
     }
 
     public String getItemType() {
@@ -65,6 +67,14 @@ public class CartItem {
 
     public void setQuantity(int quantity) {
         this.quantity = quantity;
+    }
+
+    public boolean isSelected() {
+        return selected;
+    }
+
+    public void setSelected(boolean selected) {
+        this.selected = selected;
     }
     
     public double getSubTotal() {

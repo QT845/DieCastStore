@@ -7,6 +7,88 @@
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
         <title>Cart</title>
+        <script>
+            // Tính tổng tiền của các sản phẩm được chọn
+            function updateSelectedTotal() {
+                var checkboxes = document.querySelectorAll('.item-checkbox:checked');
+                var total = 0;
+                var selectedCount = 0;
+                
+                checkboxes.forEach(function(checkbox) {
+                    var row = checkbox.closest('tr');
+                    var subtotalCell = row.querySelector('.subtotal');
+                    var subtotal = parseFloat(subtotalCell.textContent.replace('$', '').replace(',', ''));
+                    total += subtotal;
+                    selectedCount++;
+                });
+                
+                document.getElementById('selectedTotal').textContent = total.toFixed(2) + ' $';
+                document.getElementById('selectedCount').textContent = selectedCount;
+                
+                // Enable/disable checkout button
+                var checkoutBtn = document.getElementById('checkoutBtn');
+                checkoutBtn.disabled = selectedCount === 0;
+                checkoutBtn.style.backgroundColor = selectedCount === 0 ? '#ccc' : '#4CAF50';
+            }
+            
+            // Chọn/bỏ chọn tất cả
+            function toggleSelectAll() {
+                var selectAllCheckbox = document.getElementById('selectAll');
+                var itemCheckboxes = document.querySelectorAll('.item-checkbox');
+                
+                itemCheckboxes.forEach(function(checkbox) {
+                    checkbox.checked = selectAllCheckbox.checked;
+                });
+                
+                updateSelectedTotal();
+            }
+            
+            // Kiểm tra trạng thái "Chọn tất cả"
+            function checkSelectAllStatus() {
+                var itemCheckboxes = document.querySelectorAll('.item-checkbox');
+                var checkedCheckboxes = document.querySelectorAll('.item-checkbox:checked');
+                var selectAllCheckbox = document.getElementById('selectAll');
+                
+                if (itemCheckboxes.length === 0) {
+                    selectAllCheckbox.checked = false;
+                    selectAllCheckbox.disabled = true;
+                } else {
+                    selectAllCheckbox.disabled = false;
+                    selectAllCheckbox.checked = itemCheckboxes.length === checkedCheckboxes.length;
+                }
+                
+                updateSelectedTotal();
+            }
+            
+            // Xử lý checkout với sản phẩm được chọn
+            function checkoutSelected() {
+                var checkboxes = document.querySelectorAll('.item-checkbox:checked');
+                if (checkboxes.length === 0) {
+                    alert('Vui lòng chọn ít nhất một sản phẩm để thanh toán!');
+                    return false;
+                }
+                
+                // Tạo form với các sản phẩm được chọn
+                var form = document.createElement('form');
+                form.method = 'POST';
+                form.action = 'cart?action=checkoutSelected';
+                
+                checkboxes.forEach(function(checkbox) {
+                    var input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = 'selectedItems';
+                    input.value = checkbox.value;
+                    form.appendChild(input);
+                });
+                
+                document.body.appendChild(form);
+                form.submit();
+            }
+            
+            window.onload = function() {
+                checkSelectAllStatus();
+            }
+        </script>
     </head>
     <body>
         <h1>My cart</h1>
@@ -50,10 +132,19 @@
             <p>Total products: <strong><%= cart.getTotalQuantity() %></strong></p>
             <p>Total amount: <strong><%= String.format("%.2f", cart.getTotalAmount()) %> $</strong></p>
         </div>
+        
+        <!-- Thông tin sản phẩm được chọn -->
+        <div style="background-color: #f0f8ff; padding: 10px; margin: 10px 0; border: 1px solid #ddd;">
+            <strong>Selected: <span id="selectedCount">0</span> products | Total: <span id="selectedTotal">0.00 $</span></strong>
+        </div>
 
         <table border="1" cellpadding="5" cellspacing="0" width="100%">
             <thead>
                 <tr>
+                    <th>
+                        <input type="checkbox" id="selectAll" onchange="toggleSelectAll()">
+                        Select all
+                    </th>                    
                     <th>No.</th>
                     <th>Product Name</th>
                     <th>Type</th>
@@ -69,10 +160,15 @@
                     for (CartItem item : items) {
                 %>
                 <tr>
+                    <td>
+                        <input type="checkbox" class="item-checkbox" 
+                               value="<%= item.getItemType() %>_<%= item.getItemId() %>"
+                               onchange="checkSelectAllStatus()">
+                    </td>
                     <td><%= index++ %></td>
                     <td><%= item.getItemName() %></td>
                     <td>
-                        <%= "MODEL".equals(item.getItemType()) ? "Mô hình xe" : "Phụ kiện" %>
+                        <%= "MODEL".equals(item.getItemType()) ? "Car model" : "Accessory" %>
                     </td>
                     <td><%= String.format("%.2f", item.getUnitPrice()) %> $</td>
                     <td>
@@ -86,7 +182,7 @@
                             <input type="submit" value="Update">
                         </form>
                     </td>
-                    <td><%= String.format("%.2f", item.getSubTotal()) %> $</td>
+                    <td class="subtotal"><%= String.format("%.2f", item.getSubTotal()) %> $</td>
                     <td>
                         <!-- Nút xóa sản phẩm -->
                         <a href="cart?action=remove&itemType=<%= item.getItemType() %>&itemId=<%= item.getItemId() %>"
@@ -102,7 +198,7 @@
         </table>
 
         <div style="margin-top: 20px;">
-            <h3>Total: <%= String.format("%.2f", cart.getTotalAmount()) %> $</h3>
+            <h3>Total all products: <%= String.format("%.2f", cart.getTotalAmount()) %> $</h3>
         </div>
 
         <div style="margin-top: 20px;">
@@ -114,8 +210,14 @@
             &nbsp;&nbsp;|&nbsp;&nbsp;
             <a href="productList.jsp">Continue shopping</a>
             &nbsp;&nbsp;|&nbsp;&nbsp;
+            <button id="checkoutBtn" onclick="checkoutSelected()" 
+                    style="background-color: #ccc; color: white; padding: 10px 20px; border: none; cursor: pointer;"
+                    disabled>
+                Pay selected products
+            </button>
+            &nbsp;&nbsp;|&nbsp;&nbsp;
             <a href="cart?action=checkout" style="background-color: #4CAF50; color: white; padding: 10px 20px; text-decoration: none;">
-                Pay
+                Pay all products
             </a>
         </div>
         <%
