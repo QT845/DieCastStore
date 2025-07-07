@@ -131,13 +131,43 @@ public class ModelCarDAO implements IDAO<ModelCar, String> {
     }
 
     @Override
-    public boolean update(ModelCar entity) {
-        throw new UnsupportedOperationException("Not supported yet.");
+    public boolean update(ModelCar car) {
+        String sql = "UPDATE ModelCar SET modelName = ?, scaleId = ?, brandId = ?, price = ?, description = ?, quantity = ? WHERE modelId = ?";
+        try ( Connection conn = DBUtils.getConnection();  PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, car.getModelName());
+            stmt.setInt(2, car.getScaleId());
+            stmt.setInt(3, car.getBrandId());
+            stmt.setDouble(4, car.getPrice());
+            stmt.setString(5, car.getDescription());
+            stmt.setInt(6, car.getQuantity());
+            stmt.setString(7, car.getModelId());
+
+            int affectedRows = stmt.executeUpdate();
+            return affectedRows > 0;
+
+        } catch (SQLException | ClassNotFoundException e) {
+            e.printStackTrace();
+            return false;
+        }
     }
 
     @Override
     public boolean delete(String id) {
         throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    public boolean updateQuantity(String modelId, int newQuantity) {
+        String sql = "UPDATE modelCar SET quantity = ? WHERE modelId = ?";
+        try ( Connection conn = DBUtils.getConnection();  PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, newQuantity);
+            ps.setString(2, modelId);
+
+            return ps.executeUpdate() > 0;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
     }
 
     public List<ModelCar> getLatestProducts(int limit) throws SQLException {

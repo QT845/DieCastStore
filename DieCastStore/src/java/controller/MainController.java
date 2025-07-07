@@ -15,7 +15,7 @@ import jakarta.servlet.http.HttpServletResponse;
  *
  * @author hqthi
  */
-@WebServlet(name = "MainController", urlPatterns = {"","/MainController"})
+@WebServlet(name = "MainController", urlPatterns = {"", "/MainController"})
 public class MainController extends HttpServlet {
 
     private static final String WELCOME = "home.jsp";
@@ -36,14 +36,20 @@ public class MainController extends HttpServlet {
                 || "detail".equals(action)
                 || "search".equals(action);
     }
-    
+
     private boolean isCartAction(String action) {
-        return "add".equals(action)
-                || "view".equals(action)
+        return "view".equals(action)
+                || "add".equals(action)
+                || "update".equals(action)
                 || "remove".equals(action)
                 || "clear".equals(action)
-                || "update".equals(action)
-                || "checkout".equals(action);
+                || "buyNow".equals(action);
+    }
+
+    private boolean isCheckoutAction(String action) {
+        return "show".equals(action)
+                || "process".equals(action)
+                || "showSelected".equals(action);
     }
 
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
@@ -59,7 +65,9 @@ public class MainController extends HttpServlet {
                     url = "/ProductController";
                 } else if (isCartAction(action)) {
                     url = "/CartController";
-                } else {
+                } else if(isCheckoutAction(action)){
+                    url = "/CheckoutController";
+                }else {
                     request.setAttribute("message", "Invalid action: " + action);
                 }
             }

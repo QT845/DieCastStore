@@ -13,42 +13,42 @@
                 var checkboxes = document.querySelectorAll('.item-checkbox:checked');
                 var total = 0;
                 var selectedCount = 0;
-                
-                checkboxes.forEach(function(checkbox) {
+
+                checkboxes.forEach(function (checkbox) {
                     var row = checkbox.closest('tr');
                     var subtotalCell = row.querySelector('.subtotal');
                     var subtotal = parseFloat(subtotalCell.textContent.replace('$', '').replace(',', ''));
                     total += subtotal;
                     selectedCount++;
                 });
-                
+
                 document.getElementById('selectedTotal').textContent = total.toFixed(2) + ' $';
                 document.getElementById('selectedCount').textContent = selectedCount;
-                
+
                 // Enable/disable checkout button
                 var checkoutBtn = document.getElementById('checkoutBtn');
                 checkoutBtn.disabled = selectedCount === 0;
                 checkoutBtn.style.backgroundColor = selectedCount === 0 ? '#ccc' : '#4CAF50';
             }
-            
+
             // Chọn/bỏ chọn tất cả
             function toggleSelectAll() {
                 var selectAllCheckbox = document.getElementById('selectAll');
                 var itemCheckboxes = document.querySelectorAll('.item-checkbox');
-                
-                itemCheckboxes.forEach(function(checkbox) {
+
+                itemCheckboxes.forEach(function (checkbox) {
                     checkbox.checked = selectAllCheckbox.checked;
                 });
-                
+
                 updateSelectedTotal();
             }
-            
+
             // Kiểm tra trạng thái "Chọn tất cả"
             function checkSelectAllStatus() {
                 var itemCheckboxes = document.querySelectorAll('.item-checkbox');
                 var checkedCheckboxes = document.querySelectorAll('.item-checkbox:checked');
                 var selectAllCheckbox = document.getElementById('selectAll');
-                
+
                 if (itemCheckboxes.length === 0) {
                     selectAllCheckbox.checked = false;
                     selectAllCheckbox.disabled = true;
@@ -56,36 +56,36 @@
                     selectAllCheckbox.disabled = false;
                     selectAllCheckbox.checked = itemCheckboxes.length === checkedCheckboxes.length;
                 }
-                
+
                 updateSelectedTotal();
             }
-            
+
             // Xử lý checkout với sản phẩm được chọn
             function checkoutSelected() {
                 var checkboxes = document.querySelectorAll('.item-checkbox:checked');
                 if (checkboxes.length === 0) {
-                    alert('Vui lòng chọn ít nhất một sản phẩm để thanh toán!');
+                    alert('Please select at least one product to checkout!');
                     return false;
                 }
-                
+
                 // Tạo form với các sản phẩm được chọn
                 var form = document.createElement('form');
                 form.method = 'POST';
-                form.action = 'cart?action=checkoutSelected';
-                
-                checkboxes.forEach(function(checkbox) {
+                form.action = 'checkout?action=showSelected';
+
+                checkboxes.forEach(function (checkbox) {
                     var input = document.createElement('input');
                     input.type = 'hidden';
                     input.name = 'selectedItems';
                     input.value = checkbox.value;
                     form.appendChild(input);
                 });
-                
+
                 document.body.appendChild(form);
                 form.submit();
             }
-            
-            window.onload = function() {
+
+            window.onload = function () {
                 checkSelectAllStatus();
             }
         </script>
@@ -102,7 +102,7 @@
             if (error != null) {
         %>
         <div style="color: red; margin-bottom: 10px;">
-            <strong>Lỗi: </strong><%= error %>
+            <strong>Error: </strong><%= error %>
         </div>
         <%
             }
@@ -117,9 +117,47 @@
         <%
             }
         
+            // Hiển thị thông báo success từ session
+            String successMessage = (String) session.getAttribute("successMessage");
+            if (successMessage != null) {
+        %>
+        <div style="color: green; margin-bottom: 10px;">
+            <strong>Succeed: </strong><%= successMessage %>
+        </div>
+        <%
+                session.removeAttribute("successMessage");
+            }
+            
+            // Hiển thị thông báo error từ session
+            String errorMessage = (String) session.getAttribute("errorMessage");
+            if (errorMessage != null) {
+        %>
+        <div style="color: red; margin-bottom: 10px;">
+            <strong>Error: </strong><%= errorMessage %>
+        </div>
+        <%
+                session.removeAttribute("errorMessage");
+            }
+            
+            // Hiển thị cảnh báo tồn kho
+            List<String> inventoryErrors = (List<String>) session.getAttribute("inventoryErrors");
+            if (inventoryErrors != null && !inventoryErrors.isEmpty()) {
+        %>
+        <div style="color: red; margin-bottom: 10px;">
+            <strong>Inventory Alert:</strong>
+            <ul>
+                <% for (String inventoryError : inventoryErrors) { %>
+                <li><%= inventoryError %></li>
+                    <% } %>
+            </ul>
+        </div>
+        <%
+                session.removeAttribute("inventoryErrors");
+            }
+        
             // Kiểm tra giỏ hàng có trống không
             if (cart == null || cart.isEmpty()) {
-        %>
+        %>    
         <div>
             <h3>Your cart is empty</h3>
             <p><a href="productList.jsp">Continue shopping</a></p>
@@ -132,8 +170,8 @@
             <p>Total products: <strong><%= cart.getTotalQuantity() %></strong></p>
             <p>Total amount: <strong><%= String.format("%.2f", cart.getTotalAmount()) %> $</strong></p>
         </div>
-        
-        <!-- Thông tin sản phẩm được chọn -->
+
+
         <div style="background-color: #f0f8ff; padding: 10px; margin: 10px 0; border: 1px solid #ddd;">
             <strong>Selected: <span id="selectedCount">0</span> products | Total: <span id="selectedTotal">0.00 $</span></strong>
         </div>
@@ -158,35 +196,55 @@
                 <%
                     int index = 1;
                     for (CartItem item : items) {
+                        // Kiểm tra trạng thái tồn kho
+                        boolean isOutOfStock = item.getAvailableQuantity() <= 0;
+                        boolean isLowStock = item.getAvailableQuantity() > 0 && item.getAvailableQuantity() < item.getQuantity();
+                        boolean itemExists = item.isItemExists();
+                        
+                        String rowClass = "";
+                        if (!itemExists || isOutOfStock) {
+                            rowClass = "out-of-stock";
+                        }
                 %>
-                <tr>
+                <tr class="<%= rowClass %>">
                     <td>
                         <input type="checkbox" class="item-checkbox" 
                                value="<%= item.getItemType() %>_<%= item.getItemId() %>"
-                               onchange="checkSelectAllStatus()">
+                               onchange="checkSelectAllStatus()"
+                               <%= (!itemExists || isOutOfStock) ? "disabled" : "" %>>
                     </td>
                     <td><%= index++ %></td>
-                    <td><%= item.getItemName() %></td>
                     <td>
-                        <%= "MODEL".equals(item.getItemType()) ? "Car model" : "Accessory" %>
+                        <%= item.getItemName() %>
+                        <% if (!itemExists) { %>
+                        <br>(Product does not exist)
+                        <% } else if (isOutOfStock) { %>
+                        <br>(Out of stock)
+                        <% } %>
+                    </td>
+                    <td>
+                        <%= "MODEL".equals(item.getItemType()) ? "Car Model" : "Accessory" %>
                     </td>
                     <td><%= String.format("%.2f", item.getUnitPrice()) %> $</td>
                     <td>
-                        <!-- Form cập nhật số lượng -->
+                        <% if (!itemExists || isOutOfStock) { %>
+                        <span style="color: red;"><%= item.getQuantity() %></span>
+                        <% } else { %>
                         <form action="cart" method="post" style="display: inline;">
                             <input type="hidden" name="action" value="update">
                             <input type="hidden" name="itemType" value="<%= item.getItemType() %>">
                             <input type="hidden" name="itemId" value="<%= item.getItemId() %>">
                             <input type="number" name="quantity" value="<%= item.getQuantity() %>" 
-                                   min="1" max="100" style="width: 60px;">
+                                   min="0" max="100000" style="width: 60px;">
                             <input type="submit" value="Update">
                         </form>
+                        <% } %>
                     </td>
                     <td class="subtotal"><%= String.format("%.2f", item.getSubTotal()) %> $</td>
                     <td>
-                        <!-- Nút xóa sản phẩm -->
+
                         <a href="cart?action=remove&itemType=<%= item.getItemType() %>&itemId=<%= item.getItemId() %>"
-                           onclick="return confirm('Bạn có chắc muốn xóa sản phẩm này?')">
+                           onclick="return confirm('Are you sure you want to delete this product?')">
                             Delete
                         </a>
                     </td>
@@ -203,7 +261,7 @@
 
         <div style="margin-top: 20px;">
             <a href="cart?action=clear" 
-               onclick="return confirm('Bạn có chắc muốn xóa toàn bộ giỏ hàng?')"
+               onclick="return confirm('Are you sure you want to delete the entire cart?')"
                style="color: red;">
                 Clear entire cart
             </a>
@@ -216,7 +274,7 @@
                 Pay selected products
             </button>
             &nbsp;&nbsp;|&nbsp;&nbsp;
-            <a href="cart?action=checkout" style="background-color: #4CAF50; color: white; padding: 10px 20px; text-decoration: none;">
+            <a href="checkout?action=show" style="background-color: #4CAF50; color: white; padding: 10px 20px; text-decoration: none;">
                 Pay all products
             </a>
         </div>

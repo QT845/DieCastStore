@@ -14,10 +14,14 @@ public class CartItem {
     private String itemName;
     private double unitPrice;
     private int quantity;
-    private boolean selected;
+    private int availableQuantity;
+    private boolean itemExists;
+    private boolean inStock;
     
     public CartItem(){
-        this.selected = false;
+        this.itemExists = true;
+        this.inStock = true;
+        this.availableQuantity = 0;
     }
     
     public CartItem(String itemType, String itemId, String itemName, double unitPrice, int quantity){
@@ -26,7 +30,9 @@ public class CartItem {
         this.itemName = itemName;
         this.unitPrice = unitPrice; 
         this.quantity = quantity;
-        this.selected = false;
+        this.itemExists = true;
+        this.inStock = true;
+        this.availableQuantity = 0;
     }
 
     public String getItemType() {
@@ -68,13 +74,29 @@ public class CartItem {
     public void setQuantity(int quantity) {
         this.quantity = quantity;
     }
-
-    public boolean isSelected() {
-        return selected;
+    
+    public int getAvailableQuantity() {
+        return availableQuantity;
     }
 
-    public void setSelected(boolean selected) {
-        this.selected = selected;
+    public void setAvailableQuantity(int availableQuantity) {
+        this.availableQuantity = availableQuantity;
+    }
+
+    public boolean isItemExists() {
+        return itemExists;
+    }
+
+    public void setItemExists(boolean itemExists) {
+        this.itemExists = itemExists;
+    }
+
+    public boolean isInStock() {
+        return inStock;
+    }
+
+    public void setInStock(boolean inStock) {
+        this.inStock = inStock;
     }
     
     public double getSubTotal() {

@@ -51,7 +51,7 @@ public class CartDAO {
                     "AND target.item_type = source.item_type " +
                     "AND target.item_id = source.item_id " +
                     "WHEN MATCHED THEN " +
-                    "UPDATE SET quantity = target.quantity + source.quantity, " +
+                    "UPDATE SET quantity = source.quantity, " +
                     "           unit_price = source.unit_price, " +
                     "           item_name = source.item_name, " +
                     "           updated_at = GETDATE() " +

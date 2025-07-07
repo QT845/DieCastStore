@@ -48,7 +48,7 @@
         <br>
         <% } %>
 
-        <form action="cart?action=processCheckout" method="post" onsubmit="return validateForm()">
+        <form action="checkout?action=process" method="post" onsubmit="return validateForm()">
             <table>
                 <tr>
                     <td><label for="customerName">Full name *</label></td>
@@ -58,7 +58,7 @@
                     <td><label for="phone">Phone number *</label></td>
                     <td><input type="tel" id="phone" name="phone" size="30" 
                                pattern="[0-9]{10,11}" 
-                               title="Số điện thoại phải có 10-11 chữ số" required></td>
+                               title="Phone number must be 10-11 digits" required></td>
                 </tr>
                 <tr>
                     <td valign="top"><label for="address">Address *</label></td>
@@ -106,11 +106,11 @@
 
                 var phonePattern = /^[0-9]{10,11}$/;
                 if (!phonePattern.test(phone)) {
-                    alert("Số điện thoại không hợp lệ! Vui lòng nhập 10-11 chữ số.");
+                    alert("Invalid phone number! Please enter 10-11 digits.");
                     return false;
                 }
 
-                return confirm("Bạn có chắc chắn muốn đặt hàng với tổng tiền " +
+                return confirm("Are you sure you want to place an order with the total amount " +
                         "<%= df.format(totalAmount) %> $?");
             }
         </script>

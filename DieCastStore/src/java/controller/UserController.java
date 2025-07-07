@@ -143,7 +143,7 @@ public class UserController extends HttpServlet {
                     Cart sessionCart = (Cart) session.getAttribute("cart");
                     // Merge cart từ database với cart hiện tại trong session (nếu có)
                     if (sessionCart != null && !sessionCart.getItems().isEmpty()) {
-                        // Có cart trong session (guest cart) -> merge với saved cart
+                        // Có cart trong session 
                         for (CartItem item : sessionCart.getItems()) {
                             savedCart.addItem(item.getItemType(), item.getItemId(),
                                     item.getItemName(), item.getUnitPrice(), item.getQuantity());
