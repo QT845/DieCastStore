@@ -9,7 +9,6 @@
 <%
     String orderId = (String) request.getAttribute("orderId");
     Double totalAmount = (Double) request.getAttribute("totalAmount");
-    DecimalFormat df = new DecimalFormat("#,##0.00");
 %>
 <!DOCTYPE html>
 <html>

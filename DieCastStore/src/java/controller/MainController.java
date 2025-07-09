@@ -52,6 +52,11 @@ public class MainController extends HttpServlet {
                 || "showSelected".equals(action);
     }
 
+    private boolean isOrderAction(String action){
+        return "list".equals(action)
+                || "vieworder".equals(action)
+                || "cancel".equals(action);
+    }
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         response.setContentType("text/html;charset=UTF-8");
@@ -67,6 +72,8 @@ public class MainController extends HttpServlet {
                     url = "/CartController";
                 } else if(isCheckoutAction(action)){
                     url = "/CheckoutController";
+                }else if(isOrderAction(action)){
+                    url = "/OrderController";
                 }else {
                     request.setAttribute("message", "Invalid action: " + action);
                 }
