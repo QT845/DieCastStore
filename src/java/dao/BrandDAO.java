@@ -21,7 +21,7 @@ public class BrandDAO implements IDAO<BrandModel, Integer> {
 
     private static final String GET_ALL = "SELECT * FROM brandModel";
     private static final String GET_BY_ID = "SELECT * FROM brandModel WHERE brandId = ?";
-    private static final String GET_BY_BRAND_NAME = "SELECT * FROM brandModel WHERE brandName like ?";
+    private static final String GET_BY_BRAND_NAME = "SELECT * FROM brandModel WHERE brandName = ?";
     private static final String CREATE = "INSERT INTO brandModel(brandName) VALUES (?)";
     private static final String UPDATE = "UPDATE brandModel SET brandName = ? WHERE brandId = ?";
     private static final String DELETE = "DELETE FROM brandModel WHERE brandId = ?";
@@ -102,26 +102,24 @@ public class BrandDAO implements IDAO<BrandModel, Integer> {
         return null;
     }
 
-    public List<BrandModel> getByBrandName(String name) {
-        List<BrandModel> brand = new ArrayList<>();
+    public BrandModel getByBrandName(String name) {
         Connection c = null;
         PreparedStatement st = null;
         ResultSet rs = null;
         try {
             c = DBUtils.getConnection();
             st = c.prepareStatement(GET_BY_BRAND_NAME);
-            st.setString(1, "%"+name+"%");
+            st.setString(1, name);
             rs = st.executeQuery();
-            while (rs.next()) {
-                brand.add(mapResultSet(rs));
+            if (rs.next()) {
+                return mapResultSet(rs);
             }
         } catch (ClassNotFoundException | SQLException e) {
             e.printStackTrace();
-            return null;
         } finally {
             closeResources(c, st, rs);
         }
-        return brand;
+        return null;
     }
 
     @Override
