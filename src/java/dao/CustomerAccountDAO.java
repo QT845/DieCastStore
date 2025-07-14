@@ -17,13 +17,12 @@ import utils.PasswordUtils;
 public class CustomerAccountDAO implements IDAO<CustomerAccount, String> {
 
     private static final String GET_ALL = "SELECT * FROM customerAccount";
-    private static final String GET_BY_ID = "SELECT * FROM customerAccount WHERE customerId LIKE ?";
-    private static final String GET_BY_USER_NAME = "SELECT * FROM customerAccount WHERE userName LIKE ?";
+    private static final String GET_BY_ID = "SELECT * FROM customerAccount WHERE customerId = ?";
+    private static final String GET_BY_USER_NAME = "SELECT * FROM customerAccount WHERE userName = ?";
     private static final String CREATE = "INSERT INTO customerAccount(userName, customerId, password, role) VALUES (?, ?, ?, ?)";
-    private static final String UPDATE = "UPDATE customerAccount SET userName = ?, password = ?, role = ? WHERE customerId LIKE ?";
-    private static final String CHANGE_PASSWORD = "UPDATE customerAccount SET password = ? WHERE customerId LIKE ?";
-    private static final String DELETE = "DELETE FROM customerAccount WHERE customerId LIKE ?";
-    private static final String COUNT = "SELECT COUNT(*) FROM customerAccount";
+    private static final String UPDATE = "UPDATE customerAccount SET role = ? WHERE customerId = ?";
+    private static final String CHANGE_PASSWORD = "UPDATE customerAccount SET password = ? WHERE customerId = ?";
+    private static final String DELETE = "DELETE FROM customerAccount WHERE customerId = ?";
 
     @Override
     public boolean create(CustomerAccount entity) {
@@ -35,7 +34,7 @@ public class CustomerAccountDAO implements IDAO<CustomerAccount, String> {
             st.setString(1, entity.getUserName());
             st.setString(2, entity.getCustomerId());
             st.setString(3, PasswordUtils.encryptSHA256(entity.getPassword()));
-            st.setInt(4, entity.getRole() != 0 ? entity.getRole() : 2);
+            st.setInt(4, entity.getRole() == 1 ? entity.getRole() : 2);
 
             return st.executeUpdate() > 0;
         } catch (Exception e) {
@@ -53,10 +52,9 @@ public class CustomerAccountDAO implements IDAO<CustomerAccount, String> {
         try {
             c = DBUtils.getConnection();
             st = c.prepareStatement(UPDATE);
-            st.setString(1, entity.getUserName());
-            st.setString(2, entity.getPassword());
-            st.setInt(3, entity.getRole());
-            st.setString(4, entity.getCustomerId());
+
+            st.setInt(1, entity.getRole());
+            st.setString(2, entity.getCustomerId());
 
             return st.executeUpdate() > 0;
         } catch (Exception e) {
@@ -224,24 +222,4 @@ public class CustomerAccountDAO implements IDAO<CustomerAccount, String> {
         }
         return false;
     }
-
-    public boolean setUserRole(String customerId, int role) {
-        Connection c = null;
-        PreparedStatement st = null;
-        try {
-            c = DBUtils.getConnection();
-            String sql = "UPDATE customerAccount SET role = ? WHERE customerId = ?";
-            st = c.prepareStatement(sql);
-            st.setInt(1, role);
-            st.setString(2, customerId);
-
-            return st.executeUpdate() > 0;
-        } catch (Exception e) {
-            e.printStackTrace();
-            return false;
-        } finally {
-            closeResources(c, st, null);
-        }
-    }
-
 }

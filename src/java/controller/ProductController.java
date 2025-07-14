@@ -756,7 +756,6 @@ public class ProductController extends HttpServlet {
             String[] captions = request.getParameterValues("captionList");
 
             ImageModelDAO imageDao = new ImageModelDAO();
-            imageDao.deleteImagesByModelId(modelId);
 
             Collection<Part> parts = request.getParts();
             String uploadPath = request.getServletContext().getRealPath("/assets/img/" + modelId + "/");
