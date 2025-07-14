@@ -1,9 +1,6 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/Servlet.java to edit this template
- */
 package controller;
 
+import dao.CartDAO;
 import dao.CustomerAccountDAO;
 import dao.CustomerDAO;
 import java.io.IOException;
@@ -13,15 +10,14 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+import java.util.List;
+import model.Cart;
+import model.CartItem;
 import model.Customer;
 import model.CustomerAccount;
 import utils.AuthUtils;
 import utils.PasswordUtils;
 
-/**
- *
- * @author hqthi
- */
 @WebServlet(name = "UserController", urlPatterns = {"/UserController"})
 public class UserController extends HttpServlet {
 
@@ -31,6 +27,8 @@ public class UserController extends HttpServlet {
     private static final String PROFILE_PAGE = "profileForm.jsp";
     private static final String EDIT_PAGE = "editProfile.jsp";
 
+    private CartDAO cartDAO = new CartDAO();
+
     public static boolean isNullOrEmpty(String str) {
         return str == null || str.trim().isEmpty();
     }
@@ -39,6 +37,9 @@ public class UserController extends HttpServlet {
             throws ServletException, IOException {
         response.setContentType("text/html;charset=UTF-8");
         String url = LOGIN_PAGE;
+        if (url == null) {
+            url = "login.jsp";
+        }
         try {
             String action = request.getParameter("action");
             if (action != null) {
@@ -70,6 +71,12 @@ public class UserController extends HttpServlet {
                     case "changePassword":
                         url = handlePasswordChanging(request, response);
                         break;
+                    case "viewAllAccount":
+                        url = handleViewAllAccount(request, response);
+                        break;
+                    case "updateRole":
+                        url = handleUpdateRole(request, response);
+                        break;
                     default:
                         request.setAttribute("message", "Invalid action: " + action);
                         url = LOGIN_PAGE;
@@ -78,8 +85,18 @@ public class UserController extends HttpServlet {
             }
         } catch (Exception e) {
         } finally {
-            request.getRequestDispatcher(url).forward(request, response);
-
+            if (url != null) {
+                try {
+                    request.getRequestDispatcher(url).forward(request, response);
+                } catch (Exception ex) {
+                    ex.printStackTrace(); // log lỗi
+                    // KHÔNG gọi sendError ở đây nữa vì response có thể đã bị gửi
+                }
+            } else {
+                // fallback an toàn nếu url null trước khi forward
+                response.setContentType("text/html;charset=UTF-8");
+                response.getWriter().println("<h3>Unexpected error: No URL to forward.</h3>");
+            }
         }
     }
 
@@ -123,52 +140,81 @@ public class UserController extends HttpServlet {
     }// </editor-fold>
 
     private String handleLogin(HttpServletRequest request, HttpServletResponse response) {
+        String url = LOGIN_PAGE;
         HttpSession session = request.getSession();
+
         String userName = request.getParameter("userName");
         String password = request.getParameter("password");
-        CustomerAccountDAO accountDAO = new CustomerAccountDAO();
-        CustomerDAO customerDAO = new CustomerDAO();
 
-        if (isNullOrEmpty(userName)
-                || isNullOrEmpty(password)) {
+        if (isNullOrEmpty(userName) || isNullOrEmpty(password)) {
             request.setAttribute("message", "Please enter your User Name and Password!");
-            return LOGIN_PAGE;
+            return url;
         }
 
         try {
-            if (!accountDAO.isActiveUserByUserName(userName)) {
-                CustomerAccount temp = accountDAO.getByUserName(userName);
-                if (temp != null && temp.getRole() == 0) {
-                    request.setAttribute("ban", "Your account has been banned. Please contact administrator!");
-                    return LOGIN_PAGE;
-                }
+            CustomerAccountDAO accountDAO = new CustomerAccountDAO();
+            CustomerDAO customerDAO = new CustomerDAO();
+
+            CustomerAccount account = accountDAO.getByUserName(userName);
+            if (account == null) {
+                session.setAttribute("message", "Username or password is incorrect!");
+                return url;
             }
 
-            if (accountDAO.login(userName, password)) {
-                CustomerAccount account = accountDAO.getByUserName(userName);
-
-                if (account != null) {
-                    Customer customer = customerDAO.getById(account.getCustomerId());
-
-                    if (customer != null) {
-                        session.setAttribute("account", account);
-                        session.setAttribute("customer", customer);
-
-                        return WELCOME_PAGE;
-                    } else {
-                        request.setAttribute("message", "Customer information not found!");
-                        return LOGIN_PAGE;
-                    }
-                } else {
-                    request.setAttribute("message", "Can not load account information!");
-                    return LOGIN_PAGE;
-                }
-            } else {
-                request.setAttribute("message", "Username or password is incorrect!");
-                return LOGIN_PAGE;
+            // Kiểm tra tài khoản bị ban
+            if (account.getRole() == 0 || !accountDAO.isActiveUserByUserName(userName)) {
+                session.setAttribute("message", "Your account has been banned.");
+                return url;
             }
+
+            // Xác thực đăng nhập (trả về boolean)
+            boolean loginSuccess = accountDAO.login(userName, password);
+            if (!loginSuccess) {
+                session.setAttribute("message", "Username or password is incorrect!");
+                return url;
+            }
+
+            // Đăng nhập thành công
+            Customer customer = customerDAO.getById(account.getCustomerId());
+            if (customer == null) {
+                session.setAttribute("message", "Customer information not found!");
+                return url;
+            }
+
+            session.setAttribute("user", account);
+            session.setAttribute("account", account);
+            session.setAttribute("customer", customer);
+            session.setAttribute("userName", account.getUserName());
+            session.setAttribute("customerId", account.getCustomerId());
+            session.setAttribute("role", account.getRole());
+
+            // Gộp giỏ hàng
+            Cart savedCart = cartDAO.getCartByCustomerId(account.getCustomerId());
+            Cart sessionCart = (Cart) session.getAttribute("cart");
+
+            if (sessionCart != null && !sessionCart.getItems().isEmpty()) {
+                for (CartItem item : sessionCart.getItems()) {
+                    savedCart.addItem(item.getItemType(), item.getItemId(),
+                            item.getItemName(), item.getUnitPrice(), item.getQuantity());
+                }
+                cartDAO.saveCart(account.getCustomerId(), savedCart);
+            }
+
+            session.setAttribute("cart", savedCart);
+
+            // Redirect nếu có
+            String redirectAfterLogin = (String) session.getAttribute("redirectAfterLogin");
+            if (redirectAfterLogin != null) {
+                session.removeAttribute("redirectAfterLogin");
+                response.sendRedirect(redirectAfterLogin);
+                return null; // đã redirect
+            }
+
+            return WELCOME_PAGE;
+
         } catch (Exception e) {
             e.printStackTrace();
+            session.setAttribute("message", "An error occurred during login.");
             return LOGIN_PAGE;
         }
     }
@@ -474,5 +520,77 @@ public class UserController extends HttpServlet {
             request.setAttribute("changeError", "System error occurred. Please try again later.");
             return EDIT_PAGE;
         }
+    }
+
+    private String handleViewAllAccount(HttpServletRequest request, HttpServletResponse response) {
+        try {
+            CustomerAccountDAO accountDAO = new CustomerAccountDAO();
+            CustomerDAO customerDAO = new CustomerDAO();
+
+            List<CustomerAccount> accounts = accountDAO.getAll();
+            List<Customer> customers = customerDAO.getAll();
+
+            // Gửi dữ liệu chính
+            request.setAttribute("accounts", accounts);
+            request.setAttribute("customers", customers);
+            request.setAttribute("isLoggedIn", AuthUtils.isLoggedIn(request));
+            request.setAttribute("isAdmin", AuthUtils.isAdmin(request));
+
+            // Gửi dữ liệu phụ cho hiển thị alert
+            String checkError = (String) request.getAttribute("checkError");
+            String message = (String) request.getAttribute("message");
+            String updatedUserId = (String) request.getAttribute("updatedUserId");
+
+            request.setAttribute("checkError", checkError);
+            request.setAttribute("message", message);
+            request.setAttribute("updatedUserId", updatedUserId);
+
+            // Gửi các thông điệp hỗ trợ khi bị chặn truy cập (dùng trong JSTL)
+            request.setAttribute("accessDeniedMessage", AuthUtils.getAccessDeniedMessage("login.jsp"));
+            request.setAttribute("loginURL", AuthUtils.getLoginURL());
+
+            return "manageAccounts.jsp";
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            request.setAttribute("checkError", "❌ Error while getting account list: " + e.getMessage());
+            return "manageAccounts.jsp";
+        }
+    }
+
+    private String handleUpdateRole(HttpServletRequest request, HttpServletResponse response) {
+        CustomerDAO customerDAO = new CustomerDAO();
+        List<Customer> customers = customerDAO.getAll();
+
+        try {
+            String customerId = request.getParameter("customerId");
+            int role = Integer.parseInt(request.getParameter("role"));
+
+            CustomerAccountDAO dao = new CustomerAccountDAO();
+            boolean updated = dao.setUserRole(customerId, role);
+
+            List<CustomerAccount> accounts = dao.getAll();
+            request.setAttribute("accounts", accounts);
+            request.setAttribute("customers", customers);
+            request.setAttribute("isLoggedIn", AuthUtils.isLoggedIn(request));
+            request.setAttribute("isAdmin", AuthUtils.isAdmin(request));
+            request.setAttribute("accessDeniedMessage", AuthUtils.getAccessDeniedMessage("login.jsp"));
+            request.setAttribute("loginURL", AuthUtils.getLoginURL());
+
+            // Chỉ báo cho đúng user vừa cập nhật
+            if (updated) {
+                request.setAttribute("updatedUserId", customerId);
+                request.setAttribute("message", "✅ Permissions updated successfully.");
+            } else {
+                request.setAttribute("updatedUserId", customerId);
+                request.setAttribute("checkError", "❌ Unable to update permissions.");
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            request.setAttribute("checkError", "❌ Error updating permissions: " + e.getMessage());
+        }
+
+        return "manageAccounts.jsp";
     }
 }

@@ -1,7 +1,3 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package dao;
 
 import java.sql.Connection;
@@ -21,12 +17,12 @@ import utils.PasswordUtils;
 public class CustomerAccountDAO implements IDAO<CustomerAccount, String> {
 
     private static final String GET_ALL = "SELECT * FROM customerAccount";
-    private static final String GET_BY_ID = "SELECT * FROM customerAccount WHERE customerId = ?";
-    private static final String GET_BY_USER_NAME = "SELECT * FROM customerAccount WHERE userName = ?";
+    private static final String GET_BY_ID = "SELECT * FROM customerAccount WHERE customerId LIKE ?";
+    private static final String GET_BY_USER_NAME = "SELECT * FROM customerAccount WHERE userName LIKE ?";
     private static final String CREATE = "INSERT INTO customerAccount(userName, customerId, password, role) VALUES (?, ?, ?, ?)";
-    private static final String UPDATE = "UPDATE customerAccount SET userName = ?, password = ?, role = ? WHERE customerId = ?";
-    private static final String CHANGE_PASSWORD = "UPDATE customerAccount SET password = ? WHERE customerId = ?";
-    private static final String DELETE = "DELETE FROM customerAccount WHERE customerId = ?";
+    private static final String UPDATE = "UPDATE customerAccount SET userName = ?, password = ?, role = ? WHERE customerId LIKE ?";
+    private static final String CHANGE_PASSWORD = "UPDATE customerAccount SET password = ? WHERE customerId LIKE ?";
+    private static final String DELETE = "DELETE FROM customerAccount WHERE customerId LIKE ?";
     private static final String COUNT = "SELECT COUNT(*) FROM customerAccount";
 
     @Override
@@ -220,7 +216,7 @@ public class CustomerAccountDAO implements IDAO<CustomerAccount, String> {
         }
         return false;
     }
-    
+
     public boolean isActiveUserByUserName(String userName) {
         CustomerAccount account = getByUserName(userName);
         if (account != null) {
@@ -228,4 +224,24 @@ public class CustomerAccountDAO implements IDAO<CustomerAccount, String> {
         }
         return false;
     }
+
+    public boolean setUserRole(String customerId, int role) {
+        Connection c = null;
+        PreparedStatement st = null;
+        try {
+            c = DBUtils.getConnection();
+            String sql = "UPDATE customerAccount SET role = ? WHERE customerId = ?";
+            st = c.prepareStatement(sql);
+            st.setInt(1, role);
+            st.setString(2, customerId);
+
+            return st.executeUpdate() > 0;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        } finally {
+            closeResources(c, st, null);
+        }
+    }
+
 }

@@ -4,13 +4,16 @@
  */
 package utils;
 
+import dao.CustomerAccountDAO;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.List;
+import model.CustomerAccount;
 
 /**
  *
- * @author hqthi
+ * @author tungi
  */
 public class PasswordUtils {
 
@@ -19,10 +22,13 @@ public class PasswordUtils {
             return null;
         }
         try {
+            // Tạo MessageDigest instance cho SHA-256
             MessageDigest md = MessageDigest.getInstance("SHA-256");
 
+            // Chuyển đổi password thành byte array và hash
             byte[] hashBytes = md.digest(password.getBytes(StandardCharsets.UTF_8));
 
+            // Chuyển đổi byte array thành hex string
             StringBuilder hexString = new StringBuilder();
             for (byte hashByte : hashBytes) {
                 String hex = Integer.toHexString(0xff & hashByte);
@@ -31,7 +37,9 @@ public class PasswordUtils {
                 }
                 hexString.append(hex);
             }
+
             return hexString.toString();
+
         } catch (NoSuchAlgorithmException e) {
             System.err.println("SHA-256 algorithm not available: " + e.getMessage());
             return null;
@@ -40,19 +48,21 @@ public class PasswordUtils {
             return null;
         }
     }
-    
+
     public static boolean verifyPassword(String plainPassword, String hashedPassword) {
-        if(plainPassword == null || hashedPassword == null) {
+        if (plainPassword == null || hashedPassword == null) {
             return false;
         }
         String hash = encryptSHA256(plainPassword);
         return hash.equals(hashedPassword);
     }
-//    public static void main(String[] args) {
-//        CustomerAccountDAO accountDAO = new CustomerAccountDAO();
-//        List<CustomerAccount> list = accountDAO.getAll();
-//        for (CustomerAccount a : list) {
-//            accountDAO.changePassword(a);
+
+    public static void main(String[] args) {
+        System.out.println(encryptSHA256("Star1"));
+//        CustomerAccountDAO udao = new CustomerAccountDAO();
+//        List<CustomerAccount> list = udao.getAll();
+//        for (CustomerAccount u : list) {
+//            udao.updatePassword(u.getCustomerId(), encryptSHA256(u.getPassword()));
 //        }
-//    }
+    }
 }
