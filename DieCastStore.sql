@@ -4,7 +4,8 @@ DROP DATABASE DieCastStore
 GO
 
 CREATE DATABASE DieCastStore 
-Go
+GO
+
 USE DieCastStore
 GO
 CREATE TABLE customer (
@@ -58,9 +59,9 @@ CREATE TABLE accessory (
     accessoryName VARCHAR(100) NOT NULL,
     detail TEXT,
     price FLOAT NOT NULL,
-    quantity INT
+    quantity INT,
+	imageUrl VARCHAR(500)
 )
-
 CREATE TABLE orders (
     orderId VARCHAR(50) PRIMARY KEY,
     customerId VARCHAR(50) NOT NULL,
@@ -79,6 +80,45 @@ CREATE TABLE orderDetail (
     FOREIGN KEY (orderId) REFERENCES orders(orderId) ON DELETE CASCADE
 )
 
+ --thêm 1 bảng để chứa ảnh cho trang home.jsp.
+CREATE TABLE home_gallery (
+    id INT IDENTITY(1,1) PRIMARY KEY,
+    image_url VARCHAR(255),
+    caption VARCHAR(255),
+    display_order INT NOT NULL DEFAULT 0,
+    description VARCHAR(MAX), 
+	type varchar(50),
+    created_at DATETIME DEFAULT GETDATE()
+);
+
+-- thêm 1 bảng để nhận contactMess của customer.
+CREATE TABLE ContactMessages (
+    id INT IDENTITY(1,1) PRIMARY KEY,
+    name NVARCHAR(100),
+    email NVARCHAR(100),
+    message NVARCHAR(MAX),
+    created_at DATETIME DEFAULT GETDATE()
+);
+
+
+CREATE TABLE customer_cart (
+    id INT IDENTITY(1,1) PRIMARY KEY,
+    customer_id VARCHAR(50) NOT NULL, 
+    item_type VARCHAR(20) NOT NULL, -- 'MODEL' hoặc 'ACCESSORY'  
+    item_id VARCHAR(50) NOT NULL,
+    item_name NVARCHAR(255) NOT NULL, 
+    unit_price DECIMAL(10,2) NOT NULL,
+    quantity INT NOT NULL,
+    created_at DATETIME2 DEFAULT GETDATE(),
+    updated_at DATETIME2 DEFAULT GETDATE(),
+    
+    -- Tránh trùng lặp sản phẩm cho cùng 1 khách hàng
+    CONSTRAINT unique_customer_item UNIQUE (customer_id, item_type, item_id),
+    
+    -- Foreign key với bảng customer 
+    CONSTRAINT FK_customer_cart_customer 
+        FOREIGN KEY (customer_id) REFERENCES customer(customerId) ON DELETE CASCADE
+);
 
 INSERT INTO customer (customerId, customerName, email, phone, address) VALUES
 ('C001', 'Admin User', 'admin@diecast.com', '0123456789', 'Admin Street, Admin City'),
@@ -86,23 +126,21 @@ INSERT INTO customer (customerId, customerName, email, phone, address) VALUES
 ('C003', 'Banned User', 'banned@diecast.com', '0112233445', 'Banned Alley, No Access');
 
 INSERT INTO customerAccount (userName, customerId, password, role) VALUES
-('admin', 'C001', 'admin123', 1),        -- admin account
-('user1', 'C002', 'user123', 2),         -- normal user
-('banned1', 'C003', 'banned123', 0);
+('admin', 'C001', '6b86b273ff34fce19d6b804eff5a3f5747ada4eaa22f1d49c01e52ddb7875b4b', 1),        -- admin account
+('user1', 'C002', '6b86b273ff34fce19d6b804eff5a3f5747ada4eaa22f1d49c01e52ddb7875b4b', 2),         -- normal user
+('banned1', 'C003', '6b86b273ff34fce19d6b804eff5a3f5747ada4eaa22f1d49c01e52ddb7875b4b', 0);
 
-SET IDENTITY_INSERT brandModel ON;
-INSERT INTO brandModel (brandId, brandName) VALUES 
-(1, 'MiniGT'),
-(2, 'Hot Wheels'),
-(3, 'Bburago'),
-(4, 'Maisto'),
-(5, 'Tomica'),
-(6, 'AutoArt'),
-(7, 'GreenLight'),
-(8, 'Kyosho'),
-(9, 'Matchbox'),
-(10, 'Welly');
-SET IDENTITY_INSERT brandModel OFF;
+INSERT INTO brandModel (brandName) VALUES 
+( 'MiniGT'),
+('Hot Wheels'),
+('Bburago'),
+('Maisto'),
+('Tomica'),
+('AutoArt'),
+('GreenLight'),
+('Kyosho'),
+('Matchbox'),
+('Welly')
 
 INSERT INTO scaleModel (scaleLabel) VALUES
 ('1/64'),
@@ -131,90 +169,6 @@ INSERT INTO modelCar (modelId, modelName, scaleId, brandId, price, description, 
 ('WLY002', 'Model car of Audi R8 V10 Plus scale 1:24 Welly', 2, 10, 31.25, 'This Welly 1:24-scale Audi R8 V10 replica delivers luxury supercar appeal with exquisite detail at an accessible price. Crafted from durable die-cast alloy, it measures roughly 18 cm long and features opening doors, an opening hood and trunk, allowing full exploration of the interior and engine bays. The model boasts a realistic cabin layout with sculpted seats, dash, steering wheel, and pedals. Its standout feature is the transparent rear cover showcasing a finely molded V10 engine—true to the real car is lineage. Exterior highlights include LED-style headlights, side-air intakes, signature Audi grille, and a sleek low-profile design, all enhanced by a smooth, high-gloss metallic finish available in white, black, red, yellow, blue, and matte black variants. Hot on Reddit, users praise Welly’s model quality for its price: “it probably the best 1:24 for the money”,  “A Welly Audi R8 V10 in white. One of my favorite cars”. With steerable front wheels and rubber-style tires, this R8 combines visual accuracy, interactive features, and robust build. It’s an ideal display piece or gift for fans of high-performance European supercars who appreciate craftsmanship and value.', 75);
 
 
-
-INSERT INTO imageModel (imageId, modelId, imageUrl, caption) VALUES
-('MGT002_01', 'MGT002', 'assects/img/MGT002/1.jpg', 'Toyota Supra A90'),
-('MGT002_02', 'MGT002', 'assects/img/MGT002/2.jpg', 'Toyota Supra A90'),
-('MGT002_03', 'MGT002', 'assects/img/MGT002/3.jpg', 'Toyota Supra A90'),
-('MGT002_04', 'MGT002', 'assects/img/MGT002/4.jpg', 'Toyota Supra A90'),
-('HW002_01', 'HW002', 'assects/img/HW002/1.jpg', 'Ford Mustang GT'),
-('HW002_02', 'HW002', 'assects/img/HW002/2.jpg', 'Ford Mustang GT'),
-('HW002_03', 'HW002', 'assects/img/HW002/3.jpg', 'Ford Mustang GT'),
-('HW002_04', 'HW002', 'assects/img/HW002/4.jpg', 'Ford Mustang GT'),
-('BBR002_01', 'BBR002', 'assects/img/BBR002/1.jpg', 'Lamborghini Huracán EVO'),
-('BBR002_02', 'BBR002', 'assects/img/BBR002/2.jpg', 'Lamborghini Huracán EVO'),
-('BBR002_03', 'BBR002', 'assects/img/BBR002/3.jpg', 'Lamborghini Huracán EVO'),
-('BBR002_04', 'BBR002', 'assects/img/BBR002/4.jpg', 'Lamborghini Huracán EVO'),
-('MST001_01', 'MST001', 'assects/img/MST001/1.jpg', 'Chevrolet Camaro ZL1'),
-('MST001_02', 'MST001', 'assects/img/MST001/2.jpg', 'Chevrolet Camaro ZL1'),
-('MST001_03', 'MST001', 'assects/img/MST001/3.jpg', 'Chevrolet Camaro ZL1'),
-('MST001_04', 'MST001', 'assects/img/MST001/4.jpg', 'Chevrolet Camaro ZL1'),
-('TMC001_01', 'TMC001', 'assects/img/TMC001/1.jpg', 'Nissan Fairlady Z'),
-('TMC001_02', 'TMC001', 'assects/img/TMC001/2.jpg', 'Nissan Fairlady Z'),
-('TMC001_03', 'TMC001', 'assects/img/TMC001/3.jpg', 'Nissan Fairlady Z'),
-('TMC001_04', 'TMC001', 'assects/img/TMC001/4.jpg', 'Nissan Fairlady Z'),
-('AAT001_01', 'AAT001', 'assects/img/AAT001/1.jpg', 'Porsche 911 GT3 RS'),
-('AAT001_02', 'AAT001', 'assects/img/AAT001/2.jpg', 'Porsche 911 GT3 RS'),
-('AAT001_03', 'AAT001', 'assects/img/AAT001/3.jpg', 'Porsche 911 GT3 RS'),
-('AAT001_04', 'AAT001', 'assects/img/AAT001/4.jpg', 'Porsche 911 GT3 RS'),
-('GL001_01', 'GL001', 'assects/img/GL001/1.jpg', 'Dodge Charger R/T'),
-('GL001_02', 'GL001', 'assects/img/GL001/2.jpg', 'Dodge Charger R/T'),
-('GL001_03', 'GL001', 'assects/img/GL001/3.jpg', 'Dodge Charger R/T'),
-('GL001_04', 'GL001', 'assects/img/GL001/4.jpg', 'Dodge Charger R/T'),
-('KYO001_01', 'KYO001', 'assects/img/KYO001/1.jpg', 'Mazda RX-7 FD3S'),
-('KYO001_02', 'KYO001', 'assects/img/KYO001/2.jpg', 'Mazda RX-7 FD3S'),
-('KYO001_03', 'KYO001', 'assects/img/KYO001/3.jpg', 'Mazda RX-7 FD3S'),
-('KYO001_04', 'KYO001', 'assects/img/KYO001/4.jpg', 'Mazda RX-7 FD3S'),
-('MTB001_01', 'MTB001', 'assects/img/MTB001/1.jpg', 'Volkswagen Beetle'),
-('MTB001_02', 'MTB001', 'assects/img/MTB001/2.jpg', 'Volkswagen Beetle'),
-('MTB001_03', 'MTB001', 'assects/img/MTB001/3.jpg', 'Volkswagen Beetle'),
-('MTB001_04', 'MTB001', 'assects/img/MTB001/4.jpg', 'Volkswagen Beetle'),
-('WLY001_01', 'WLY001', 'assects/img/WLY001/1.jpg', 'BMW M3 E30'),
-('WLY001_02', 'WLY001', 'assects/img/WLY001/2.jpg', 'BMW M3 E30'),
-('WLY001_03', 'WLY001', 'assects/img/WLY001/3.jpg', 'BMW M3 E30'),
-('WLY001_04', 'WLY001', 'assects/img/WLY001/4.jpg', 'BMW M3 E30'),
-('MGT003_01', 'MGT003', 'assects/img/MGT003/1.jpg', 'Honda Civic Type R FK8'),
-('MGT003_02', 'MGT003', 'assects/img/MGT003/2.jpg', 'Honda Civic Type R FK8'),
-('MGT003_03', 'MGT003', 'assects/img/MGT003/3.jpg', 'Honda Civic Type R FK8'),
-('MGT003_04', 'MGT003', 'assects/img/MGT003/4.jpg', 'Honda Civic Type R FK8'),
-('HW003_01', 'HW003', 'assects/img/HW003/1.jpg', 'Tesla Model S'),
-('HW003_02', 'HW003', 'assects/img/HW003/2.jpg', 'Tesla Model S'),
-('HW003_03', 'HW003', 'assects/img/HW003/3.jpg', 'Tesla Model S'),
-('HW003_04', 'HW003', 'assects/img/HW003/4.jpg', 'Tesla Model S'),
-('BBR003_01', 'BBR003', 'assects/img/BBR003/1.jpg', 'Ferrari 488 GTB'),
-('BBR003_02', 'BBR003', 'assects/img/BBR003/2.jpg', 'Ferrari 488 GTB'),
-('BBR003_03', 'BBR003', 'assects/img/BBR003/3.jpg', 'Ferrari 488 GTB'),
-('BBR003_04', 'BBR003', 'assects/img/BBR003/4.jpg', 'Ferrari 488 GTB'),
-('MST002_01', 'MST002', 'assects/img/MST002/1.jpg', 'Jeep Wrangler Rubicon'),
-('MST002_02', 'MST002', 'assects/img/MST002/2.jpg', 'Jeep Wrangler Rubicon'),
-('MST002_03', 'MST002', 'assects/img/MST002/3.jpg', 'Jeep Wrangler Rubicon'),
-('MST002_04', 'MST002', 'assects/img/MST002/4.jpg', 'Jeep Wrangler Rubicon'),
-('TMC002_01', 'TMC002', 'assects/img/TMC002/1.jpg', 'Suzuki Jimny'),
-('TMC002_02', 'TMC002', 'assects/img/TMC002/2.jpg', 'Suzuki Jimny'),
-('TMC002_03', 'TMC002', 'assects/img/TMC002/3.jpg', 'Suzuki Jimny'),
-('TMC002_04', 'TMC002', 'assects/img/TMC002/4.jpg', 'Suzuki Jimny'),
-('AAT002_01', 'AAT002', 'assects/img/AAT002/1.jpg', 'McLaren P1'),
-('AAT002_02', 'AAT002', 'assects/img/AAT002/2.jpg', 'McLaren P1'),
-('AAT002_03', 'AAT002', 'assects/img/AAT002/3.jpg', 'McLaren P1'),
-('AAT002_04', 'AAT002', 'assects/img/AAT002/4.jpg', 'McLaren P1'),
-('GL002_01', 'GL002', 'assects/img/GL002/1.jpg', 'Chevrolet Impala SS'),
-('GL002_02', 'GL002', 'assects/img/GL002/2.jpg', 'Chevrolet Impala SS'),
-('GL002_03', 'GL002', 'assects/img/GL002/3.jpg', 'Chevrolet Impala SS'),
-('GL002_04', 'GL002', 'assects/img/GL002/4.jpg', 'Chevrolet Impala SS'),
-('KYO002_01', 'KYO002', 'assects/img/KYO002/1.jpg', 'Subaru Impreza WRX STI'),
-('KYO002_02', 'KYO002', 'assects/img/KYO002/2.jpg', 'Subaru Impreza WRX STI'),
-('KYO002_03', 'KYO002', 'assects/img/KYO002/3.jpg', 'Subaru Impreza WRX STI'),
-('KYO002_04', 'KYO002', 'assects/img/KYO002/4.jpg', 'Subaru Impreza WRX STI'),
-('MTB002_01', 'MTB002', 'assects/img/MTB002/1.jpg', 'Land Rover Defender 90'),
-('MTB002_02', 'MTB002', 'assects/img/MTB002/2.jpg', 'Land Rover Defender 90'),
-('MTB002_03', 'MTB002', 'assects/img/MTB002/3.jpg', 'Land Rover Defender 90'),
-('MTB002_04', 'MTB002', 'assects/img/MTB002/4.jpg', 'Land Rover Defender 90'),
-('WLY002_01', 'WLY002', 'assects/img/WLY002/1.jpg', 'Audi R8 V10 Plus'),
-('WLY002_02', 'WLY002', 'assects/img/WLY002/2.jpg', 'Audi R8 V10 Plus'),
-('WLY002_03', 'WLY002', 'assects/img/WLY002/3.jpg', 'Audi R8 V10 Plus'),
-('WLY002_04', 'WLY002', 'assects/img/WLY002/4.jpg', 'Audi R8 V10 Plus');
-
-
 INSERT INTO modelCar (modelId, modelName, scaleId, brandId, price, description, quantity) VALUES
 ('BBR004', 'Model car of Alfa Romeo Giulia scale 1:24 Bburago', 2, 3, 24.00, 'The 1:24-scale Bburago Alfa Romeo Giulia is a beautifully crafted die‑cast replica that captures the sleek elegance of the real 2016–17 Giulia. Measuring about 7.5 inches long, 3 inches wide, and 2.5 inches tall, this model combines metal and plastic parts to faithfully recreate the iconic Italian sedan. Its deep paint finish—available in striking burgundy, classic red, or metallic blue—evokes the refined aesthetics of the full-size car . The model features real rubber tires on steerable front wheels and includes opening front doors and a functional bonnet that reveals a detailed engine bay underneath—perfect for display or hands‑on interaction.Inside, the cabin shows impressive attention to detail: visible dashboards, seats, pedals, and console rail true-to-life trim. The exterior detail is equally notable, showcasing precise front grilles, side mirrors, and Alfa Romeo badging—a testament to Bburago’s dedication to realism.As part of Bburago’s 1:24 series—Italian-designed and enthusiast-loved—this Giulia model blends craftsmanship with playability. Whether as a collector’s display piece or a gift for car lovers, it brings a slice of Italian automotive passion into any home or office.', 40),
 ('MST003', 'Model car of Mercedes‑Benz G‑Class scale 1:18 Maisto', 1, 4, 29.17, 'The Maisto 1:18-scale Mercedes‑Benz G‑Class is a meticulously crafted die‑cast replica that’s both striking and functional. Coming in bold colors like red or metallic grey, this model stretches approximately 7.5 inches long, 3 inches wide, and 3 inches tall. Built with a blend of metal and plastic, it features smooth‑rolling rubber tires, realistic side steps, and a rugged, boxy shape that echoes the real G-Wagon’s commanding presence. The attention to detail is impressive: you can open the front doors to reveal a fully detailed interior—including dashboard, seats, and rear seating area. The model also offers a functional bonnet that exposes an engine bay and a movable steering mechanism tied to the front wheels . Its premium paint finish, whether glossy or metallic, emphasizes the G-Class’s iconic design elements, such as the prominent grille, round headlights, and rugged bumpers. Part of Maisto’s Special Edition series, this G-Class model combines visual appeal and hands-on play. Whether displayed on a shelf or driven across smooth surfaces, it’s a robust collectible that reflects Maisto’s commitment to quality at an affordable price. An excellent gift for enthusiasts and children, it encapsulates the adventurous spirit of the Mercedes G‑Class in miniature form.', 35),
@@ -237,95 +191,200 @@ INSERT INTO modelCar (modelId, modelName, scaleId, brandId, price, description, 
 ('AAT006', 'Model car of Rolls‑Royce Phantom scale 1:18 AutoArt', 1, 6, 125.00, 'The AUTOart 1:18‑scale Rolls‑Royce Phantom is a prestige-grade replica that impeccably captures the elegance of Britain’s flagship luxury sedan. Crafted using a composite of finely detailed ABS plastic and die-cast metal—based on official CAD data from Rolls‑Royce—the model showcases razor-sharp panel lines, a faithful rendition of the Spirit of Ecstasy emblem, and iconic Pantheon grille. Measuring roughly 11 inches in length, this collectible features fully functional front doors, hood, and trunk lid, each opening to reveal a beautifully appointed interior. Inside, you will find plush carpeted flooring, seat belts, intricate dashboard instrumentation, and luxurious seat textures—elevating it beyond a mere display piece . The engine compartment houses a convincingly detailed V12 block replica, visible when the hood is lifted. Externally, the model is finished in premium paints—glossy black with dual-tone roof options (silver/grey)—and authentic chrome trim around the grille, window surrounds, mirrors, and wheels. Steerable front wheels and soft rubber tires add realism to its presence. AUTOart, a Hong Kong-based manufacturer known for accuracy and craftsmanship, consistently delivers full-featured models—with carpet, seatbelts, opening parts, and detailed lighting—making it a top-tier brand for collectors seeking quality and elegance. In essence, this Phantom model exudes luxury in miniature form—an exquisite showpiece that reflects the grandeur of the full-scale Rolls‑Royce for display in any discerning collector’s cabinet.', 15),
 ('TMC004', 'Model car of Subaru Outback scale 1:64 Tomica', 1, 5, 14.58, 'The Tomica 1:64-scale Subaru Outback is a charming and well-detailed die-cast replica from Takara Tomy’s popular lineup. Measuring approximately 3 inches long, it features a solid metal body and chassis, crisp plastic trim, and smooth-rolling wheels—ideal for collectors who appreciate miniature realism without sacrificing play value. Though Outback castings are rare—especially compared to more common Foresters and Imprezas—the model was issued as a dealer-exclusive in several regions. As one Redditor shared: “The major brands do not make an Outback, but there IS a Subaru dealer‑exclusive line of 1:64 diecast, including an Outback.”. The miniature captures the Outback’s signature crossover silhouette, distinct roof rails, and rugged wagon stance. Paint finishes vary; popular dealer editions include deep green, white, and gray variants inspired by real-world trims like the Wilderness . While standard Tomica and Premium lines may not strictly adhere to 1:64 scale, this special model still offers excellent collector appeal. Though it lacks opening parts, this is compensated by its sturdy feel and accuracy in detailing—from the grille and headlight profile to the embossed side trims. Perfect for desk displays, dioramas, or adding a Subaru-themed piece to your collection, the Tomica Subaru Outback brings a touch of adventure and Japanese automotive charm in a compact, pocket-friendly form.', 130);
 
-
 INSERT INTO imageModel (imageId, modelId, imageUrl, caption) VALUES
-('BBR004_01', 'BBR004', 'assects/img/BBR004/1.jpg', 'Alfa Romeo Giulia'),
-('BBR004_02', 'BBR004', 'assects/img/BBR004/2.jpg', 'Alfa Romeo Giulia'),
-('BBR004_03', 'BBR004', 'assects/img/BBR004/3.jpg', 'Alfa Romeo Giulia'),
-('BBR004_04', 'BBR004', 'assects/img/BBR004/4.jpg', 'Alfa Romeo Giulia'),
-('MST003_01', 'MST003', 'assects/img/MST003/1.jpg', 'Mercedes‑Benz G‑Class'),
-('MST003_02', 'MST003', 'assects/img/MST003/2.jpg', 'Mercedes‑Benz G‑Class'),
-('MST003_03', 'MST003', 'assects/img/MST003/3.jpg', 'Mercedes‑Benz G‑Class'),
-('MST003_04', 'MST003', 'assects/img/MST003/4.jpg', 'Mercedes‑Benz G‑Class'),
-('HW004_01', 'HW004', 'assects/img/HW004/1.jpg', 'Ford F‑150 Raptor'),
-('HW004_02', 'HW004', 'assects/img/HW004/2.jpg', 'Ford F‑150 Raptor'),
-('HW004_03', 'HW004', 'assects/img/HW004/3.jpg', 'Ford F‑150 Raptor'),
-('HW004_04', 'HW004', 'assects/img/HW004/4.jpg', 'Ford F‑150 Raptor'),
-('GL003_01', 'GL003', 'assects/img/GL003/1.jpg', 'Corvette C8'),
-('GL003_02', 'GL003', 'assects/img/GL003/2.jpg', 'Corvette C8'),
-('GL003_03', 'GL003', 'assects/img/GL003/3.jpg', 'Corvette C8'),
-('GL003_04', 'GL003', 'assects/img/GL003/4.jpg', 'Corvette C8'),
-('KYO003_01', 'KYO003', 'assects/img/KYO003/1.jpg', 'Nissan GT‑R R35'),
-('KYO003_02', 'KYO003', 'assects/img/KYO003/2.jpg', 'Nissan GT‑R R35'),
-('KYO003_03', 'KYO003', 'assects/img/KYO003/3.jpg', 'Nissan GT‑R R35'),
-('KYO003_04', 'KYO003', 'assects/img/KYO003/4.jpg', 'Nissan GT‑R R35'),
-('AAT003_01', 'AAT003', 'assects/img/AAT003/1.jpg', 'BMW i8'),
-('AAT003_02', 'AAT003', 'assects/img/AAT003/2.jpg', 'BMW i8'),
-('AAT003_03', 'AAT003', 'assects/img/AAT003/3.jpg', 'BMW i8'),
-('AAT003_04', 'AAT003', 'assects/img/AAT003/4.jpg', 'BMW i8'),
-('MTB003_01', 'MTB003', 'assects/img/MTB003/1.jpg', 'Volkswagen Golf GTI'),
-('MTB003_02', 'MTB003', 'assects/img/MTB003/2.jpg', 'Volkswagen Golf GTI'),
-('MTB003_03', 'MTB003', 'assects/img/MTB003/3.jpg', 'Volkswagen Golf GTI'),
-('MTB003_04', 'MTB003', 'assects/img/MTB003/4.jpg', 'Volkswagen Golf GTI'),
-('MST004_01', 'MST004', 'assects/img/MST004/1.jpg', 'Dodge Viper ACR'),
-('MST004_02', 'MST004', 'assects/img/MST004/2.jpg', 'Dodge Viper ACR'),
-('MST004_03', 'MST004', 'assects/img/MST004/3.jpg', 'Dodge Viper ACR'),
-('MST004_04', 'MST004', 'assects/img/MST004/4.jpg', 'Dodge Viper ACR'),
-('TMC003_01', 'TMC003', 'assects/img/TMC003/1.jpg', 'Subaru BRZ'),
-('TMC003_02', 'TMC003', 'assects/img/TMC003/2.jpg', 'Subaru BRZ'),
-('TMC003_03', 'TMC003', 'assects/img/TMC003/3.jpg', 'Subaru BRZ'),
-('TMC003_04', 'TMC003', 'assects/img/TMC003/4.jpg', 'Subaru BRZ'),
-('BBR005_01', 'BBR005', 'assects/img/BBR005/1.jpg', 'Lamborghini Aventador'),
-('BBR005_02', 'BBR005', 'assects/img/BBR005/2.jpg', 'Lamborghini Aventador'),
-('BBR005_03', 'BBR005', 'assects/img/BBR005/3.jpg', 'Lamborghini Aventador'),
-('BBR005_04', 'BBR005', 'assects/img/BBR005/4.jpg', 'Lamborghini Aventador'),
-('AAT004_01', 'AAT004', 'assects/img/AAT004/1.jpg', 'Tesla Cybertruck'),
-('AAT004_02', 'AAT004', 'assects/img/AAT004/2.jpg', 'Tesla Cybertruck'),
-('AAT004_03', 'AAT004', 'assects/img/AAT004/3.jpg', 'Tesla Cybertruck'),
-('AAT004_04', 'AAT004', 'assects/img/AAT004/4.jpg', 'Tesla Cybertruck'),
-('GL004_01', 'GL004', 'assects/img/GL004/1.jpg', 'Jeep Grand Cherokee'),
-('GL004_02', 'GL004', 'assects/img/GL004/2.jpg', 'Jeep Grand Cherokee'),
-('GL004_03', 'GL004', 'assects/img/GL004/3.jpg', 'Jeep Grand Cherokee'),
-('GL004_04', 'GL004', 'assects/img/GL004/4.jpg', 'Jeep Grand Cherokee'),
-('KYO004_01', 'KYO004', 'assects/img/KYO004/1.jpg', 'Mazda MX‑5 Miata'),
-('KYO004_02', 'KYO004', 'assects/img/KYO004/2.jpg', 'Mazda MX‑5 Miata'),
-('KYO004_03', 'KYO004', 'assects/img/KYO004/3.jpg', 'Mazda MX‑5 Miata'),
-('KYO004_04', 'KYO004', 'assects/img/KYO004/4.jpg', 'Mazda MX‑5 Miata'),
-('AAT005_01', 'AAT005', 'assects/img/AAT005/1.jpg', 'Porsche Taycan'),
-('AAT005_02', 'AAT005', 'assects/img/AAT005/2.jpg', 'Porsche Taycan'),
-('AAT005_03', 'AAT005', 'assects/img/AAT005/3.jpg', 'Porsche Taycan'),
-('AAT005_04', 'AAT005', 'assects/img/AAT005/4.jpg', 'Porsche Taycan'),
-('MTB004_01', 'MTB004', 'assects/img/MTB004/1.jpg', 'Ford Bronco'),
-('MTB004_02', 'MTB004', 'assects/img/MTB004/2.jpg', 'Ford Bronco'),
-('MTB004_03', 'MTB004', 'assects/img/MTB004/3.jpg', 'Ford Bronco'),
-('MTB004_04', 'MTB004', 'assects/img/MTB004/4.jpg', 'Ford Bronco'),
-('HW005_01', 'AAT005', 'assects/img/AAT005/1.jpg', 'Mercedes‑AMG GT'),
-('HW005_02', 'HW005', 'assects/img/AAT005/2.jpg', 'Mercedes‑AMG GT'),
-('HW005_03', 'HW005', 'assects/img/AAT005/3.jpg', 'Mercedes‑AMG GT'),
-('HW005_04', 'HW005', 'assects/img/AAT005/4.jpg', 'Mercedes‑AMG GT'),
-('MST005_01', 'MST005', 'assects/img/MST005/1.jpg', 'Acura NSX'),
-('MST005_02', 'MST005', 'assects/img/MST005/2.jpg', 'Acura NSX'),
-('MST005_03', 'MST005', 'assects/img/MST005/3.jpg', 'Acura NSX'),
-('MST005_04', 'MST005', 'assects/img/MST005/4.jpg', 'Acura NSX'),
-('HW006_01', 'HW006', 'assects/img/HW005/1.jpg', 'Corvette Stingray'),
-('HW006_02', 'HW006', 'assects/img/HW005/2.jpg', 'Corvette Stingray'),
-('HW006_03', 'HW006', 'assects/img/HW005/3.jpg', 'Corvette Stingray'),
-('HW006_04', 'HW006', 'assects/img/HW005/4.jpg', 'Corvette Stingray'),
-('AAT006_01', 'AAT006', 'assects/img/AAT006/1.jpg', 'Rolls‑Royce Phantom'),
-('AAT006_02', 'AAT006', 'assects/img/AAT006/2.jpg', 'Rolls‑Royce Phantom'),
-('AAT006_03', 'AAT006', 'assects/img/AAT006/3.jpg', 'Rolls‑Royce Phantom'),
-('AAT006_04', 'AAT006', 'assects/img/AAT006/4.jpg', 'Rolls‑Royce Phantom'),
-('TMC004_01', 'TMC004', 'assects/img/TMC004/1.jpg', 'Subaru Outback'),
-('TMC004_02', 'TMC004', 'assects/img/TMC004/2.jpg', 'Subaru Outback'),
-('TMC004_03', 'TMC004', 'assects/img/TMC004/3.jpg', 'Subaru Outback'),
-('TMC004_04', 'TMC004', 'assects/img/TMC004/4.jpg', 'Subaru Outback');
+('MGT002_01', 'MGT002', 'assets/img/MGT002/1.jpg', 'Toyota Supra A90'),
+('MGT002_02', 'MGT002', 'assets/img/MGT002/2.jpg', 'Toyota Supra A90'),
+('MGT002_03', 'MGT002', 'assets/img/MGT002/3.jpg', 'Toyota Supra A90'),
+('MGT002_04', 'MGT002', 'assets/img/MGT002/4.jpg', 'Toyota Supra A90'),
+('HW002_01', 'HW002', 'assets/img/HW002/1.jpg', 'Ford Mustang GT'),
+('HW002_02', 'HW002', 'assets/img/HW002/2.jpg', 'Ford Mustang GT'),
+('HW002_03', 'HW002', 'assets/img/HW002/3.jpg', 'Ford Mustang GT'),
+('HW002_04', 'HW002', 'assets/img/HW002/4.jpg', 'Ford Mustang GT'),
+('BBR002_01', 'BBR002', 'assets/img/BBR002/1.jpg', 'Lamborghini Huracán EVO'),
+('BBR002_02', 'BBR002', 'assets/img/BBR002/2.jpg', 'Lamborghini Huracán EVO'),
+('BBR002_03', 'BBR002', 'assets/img/BBR002/3.jpg', 'Lamborghini Huracán EVO'),
+('BBR002_04', 'BBR002', 'assets/img/BBR002/4.jpg', 'Lamborghini Huracán EVO'),
+('MST001_01', 'MST001', 'assets/img/MST001/1.jpg', 'Chevrolet Camaro ZL1'),
+('MST001_02', 'MST001', 'assets/img/MST001/2.jpg', 'Chevrolet Camaro ZL1'),
+('MST001_03', 'MST001', 'assets/img/MST001/3.jpg', 'Chevrolet Camaro ZL1'),
+('MST001_04', 'MST001', 'assets/img/MST001/4.jpg', 'Chevrolet Camaro ZL1'),
+('TMC001_01', 'TMC001', 'assets/img/TMC001/1.jpg', 'Nissan Fairlady Z'),
+('TMC001_02', 'TMC001', 'assets/img/TMC001/2.jpg', 'Nissan Fairlady Z'),
+('TMC001_03', 'TMC001', 'assets/img/TMC001/3.jpg', 'Nissan Fairlady Z'),
+('TMC001_04', 'TMC001', 'assets/img/TMC001/4.jpg', 'Nissan Fairlady Z'),
+('AAT001_01', 'AAT001', 'assets/img/AAT001/1.jpg', 'Porsche 911 GT3 RS'),
+('AAT001_02', 'AAT001', 'assets/img/AAT001/2.jpg', 'Porsche 911 GT3 RS'),
+('AAT001_03', 'AAT001', 'assets/img/AAT001/3.jpg', 'Porsche 911 GT3 RS'),
+('AAT001_04', 'AAT001', 'assets/img/AAT001/4.jpg', 'Porsche 911 GT3 RS'),
+('GL001_01', 'GL001', 'assets/img/GL001/1.jpg', 'Dodge Charger R/T'),
+('GL001_02', 'GL001', 'assets/img/GL001/2.jpg', 'Dodge Charger R/T'),
+('GL001_03', 'GL001', 'assets/img/GL001/3.jpg', 'Dodge Charger R/T'),
+('GL001_04', 'GL001', 'assets/img/GL001/4.jpg', 'Dodge Charger R/T'),
+('KYO001_01', 'KYO001', 'assets/img/KYO001/1.jpg', 'Mazda RX-7 FD3S'),
+('KYO001_02', 'KYO001', 'assets/img/KYO001/2.jpg', 'Mazda RX-7 FD3S'),
+('KYO001_03', 'KYO001', 'assets/img/KYO001/3.jpg', 'Mazda RX-7 FD3S'),
+('KYO001_04', 'KYO001', 'assets/img/KYO001/4.jpg', 'Mazda RX-7 FD3S'),
+('MTB001_01', 'MTB001', 'assets/img/MTB001/1.jpg', 'Volkswagen Beetle'),
+('MTB001_02', 'MTB001', 'assets/img/MTB001/2.jpg', 'Volkswagen Beetle'),
+('MTB001_03', 'MTB001', 'assets/img/MTB001/3.jpg', 'Volkswagen Beetle'),
+('MTB001_04', 'MTB001', 'assets/img/MTB001/4.jpg', 'Volkswagen Beetle'),
+('WLY001_01', 'WLY001', 'assets/img/WLY001/1.jpg', 'BMW M3 E30'),
+('WLY001_02', 'WLY001', 'assets/img/WLY001/2.jpg', 'BMW M3 E30'),
+('WLY001_03', 'WLY001', 'assets/img/WLY001/3.jpg', 'BMW M3 E30'),
+('WLY001_04', 'WLY001', 'assets/img/WLY001/4.jpg', 'BMW M3 E30'),
+('MGT003_01', 'MGT003', 'assets/img/MGT003/1.jpg', 'Honda Civic Type R FK8'),
+('MGT003_02', 'MGT003', 'assets/img/MGT003/2.jpg', 'Honda Civic Type R FK8'),
+('MGT003_03', 'MGT003', 'assets/img/MGT003/3.jpg', 'Honda Civic Type R FK8'),
+('MGT003_04', 'MGT003', 'assets/img/MGT003/4.jpg', 'Honda Civic Type R FK8'),
+('HW003_01', 'HW003', 'assets/img/HW003/1.jpg', 'Tesla Model S'),
+('HW003_02', 'HW003', 'assets/img/HW003/2.jpg', 'Tesla Model S'),
+('HW003_03', 'HW003', 'assets/img/HW003/3.jpg', 'Tesla Model S'),
+('HW003_04', 'HW003', 'assets/img/HW003/4.jpg', 'Tesla Model S'),
+('BBR003_01', 'BBR003', 'assets/img/BBR003/1.jpg', 'Ferrari 488 GTB'),
+('BBR003_02', 'BBR003', 'assets/img/BBR003/2.jpg', 'Ferrari 488 GTB'),
+('BBR003_03', 'BBR003', 'assets/img/BBR003/3.jpg', 'Ferrari 488 GTB'),
+('BBR003_04', 'BBR003', 'assets/img/BBR003/4.jpg', 'Ferrari 488 GTB'),
+('MST002_01', 'MST002', 'assets/img/MST002/1.jpg', 'Jeep Wrangler Rubicon'),
+('MST002_02', 'MST002', 'assets/img/MST002/2.jpg', 'Jeep Wrangler Rubicon'),
+('MST002_03', 'MST002', 'assets/img/MST002/3.jpg', 'Jeep Wrangler Rubicon'),
+('MST002_04', 'MST002', 'assets/img/MST002/4.jpg', 'Jeep Wrangler Rubicon'),
+('TMC002_01', 'TMC002', 'assets/img/TMC002/1.jpg', 'Suzuki Jimny'),
+('TMC002_02', 'TMC002', 'assets/img/TMC002/2.jpg', 'Suzuki Jimny'),
+('TMC002_03', 'TMC002', 'assets/img/TMC002/3.jpg', 'Suzuki Jimny'),
+('TMC002_04', 'TMC002', 'assets/img/TMC002/4.jpg', 'Suzuki Jimny'),
+('AAT002_01', 'AAT002', 'assets/img/AAT002/1.jpg', 'McLaren P1'),
+('AAT002_02', 'AAT002', 'assets/img/AAT002/2.jpg', 'McLaren P1'),
+('AAT002_03', 'AAT002', 'assets/img/AAT002/3.jpg', 'McLaren P1'),
+('AAT002_04', 'AAT002', 'assets/img/AAT002/4.jpg', 'McLaren P1'),
+('GL002_01', 'GL002', 'assets/img/GL002/1.jpg', 'Chevrolet Impala SS'),
+('GL002_02', 'GL002', 'assets/img/GL002/2.jpg', 'Chevrolet Impala SS'),
+('GL002_03', 'GL002', 'assets/img/GL002/3.jpg', 'Chevrolet Impala SS'),
+('GL002_04', 'GL002', 'assets/img/GL002/4.jpg', 'Chevrolet Impala SS'),
+('KYO002_01', 'KYO002', 'assets/img/KYO002/1.jpg', 'Subaru Impreza WRX STI'),
+('KYO002_02', 'KYO002', 'assets/img/KYO002/2.jpg', 'Subaru Impreza WRX STI'),
+('KYO002_03', 'KYO002', 'assets/img/KYO002/3.jpg', 'Subaru Impreza WRX STI'),
+('KYO002_04', 'KYO002', 'assets/img/KYO002/4.jpg', 'Subaru Impreza WRX STI'),
+('MTB002_01', 'MTB002', 'assets/img/MTB002/1.jpg', 'Land Rover Defender 90'),
+('MTB002_02', 'MTB002', 'assets/img/MTB002/2.jpg', 'Land Rover Defender 90'),
+('MTB002_03', 'MTB002', 'assets/img/MTB002/3.jpg', 'Land Rover Defender 90'),
+('MTB002_04', 'MTB002', 'assets/img/MTB002/4.jpg', 'Land Rover Defender 90'),
+('WLY002_01', 'WLY002', 'assets/img/WLY002/1.jpg', 'Audi R8 V10 Plus'),
+('WLY002_02', 'WLY002', 'assets/img/WLY002/2.jpg', 'Audi R8 V10 Plus'),
+('WLY002_03', 'WLY002', 'assets/img/WLY002/3.jpg', 'Audi R8 V10 Plus'),
+('WLY002_04', 'WLY002', 'assets/img/WLY002/4.jpg', 'Audi R8 V10 Plus'),
+('BBR004_01', 'BBR004', 'assets/img/BBR004/1.jpg', 'Alfa Romeo Giulia'),
+('BBR004_02', 'BBR004', 'assets/img/BBR004/2.jpg', 'Alfa Romeo Giulia'),
+('BBR004_03', 'BBR004', 'assets/img/BBR004/3.jpg', 'Alfa Romeo Giulia'),
+('BBR004_04', 'BBR004', 'assets/img/BBR004/4.jpg', 'Alfa Romeo Giulia'),
+('MST003_01', 'MST003', 'assets/img/MST003/1.jpg', 'Mercedes‑Benz G‑Class'),
+('MST003_02', 'MST003', 'assets/img/MST003/2.jpg', 'Mercedes‑Benz G‑Class'),
+('MST003_03', 'MST003', 'assets/img/MST003/3.jpg', 'Mercedes‑Benz G‑Class'),
+('MST003_04', 'MST003', 'assets/img/MST003/4.jpg', 'Mercedes‑Benz G‑Class'),
+('HW004_01', 'HW004', 'assets/img/HW004/1.jpg', 'Ford F‑150 Raptor'),
+('HW004_02', 'HW004', 'assets/img/HW004/2.jpg', 'Ford F‑150 Raptor'),
+('HW004_03', 'HW004', 'assets/img/HW004/3.jpg', 'Ford F‑150 Raptor'),
+('HW004_04', 'HW004', 'assets/img/HW004/4.jpg', 'Ford F‑150 Raptor'),
+('GL003_01', 'GL003', 'assets/img/GL003/1.jpg', 'Corvette C8'),
+('GL003_02', 'GL003', 'assets/img/GL003/2.jpg', 'Corvette C8'),
+('GL003_03', 'GL003', 'assets/img/GL003/3.jpg', 'Corvette C8'),
+('GL003_04', 'GL003', 'assets/img/GL003/4.jpg', 'Corvette C8'),
+('KYO003_01', 'KYO003', 'assets/img/KYO003/1.jpg', 'Nissan GT‑R R35'),
+('KYO003_02', 'KYO003', 'assets/img/KYO003/2.jpg', 'Nissan GT‑R R35'),
+('KYO003_03', 'KYO003', 'assets/img/KYO003/3.jpg', 'Nissan GT‑R R35'),
+('KYO003_04', 'KYO003', 'assets/img/KYO003/4.jpg', 'Nissan GT‑R R35'),
+('AAT003_01', 'AAT003', 'assets/img/AAT003/1.jpg', 'BMW i8'),
+('AAT003_02', 'AAT003', 'assets/img/AAT003/2.jpg', 'BMW i8'),
+('AAT003_03', 'AAT003', 'assets/img/AAT003/3.jpg', 'BMW i8'),
+('AAT003_04', 'AAT003', 'assets/img/AAT003/4.jpg', 'BMW i8'),
+('MTB003_01', 'MTB003', 'assets/img/MTB003/1.jpg', 'Volkswagen Golf GTI'),
+('MTB003_02', 'MTB003', 'assets/img/MTB003/2.jpg', 'Volkswagen Golf GTI'),
+('MTB003_03', 'MTB003', 'assets/img/MTB003/3.jpg', 'Volkswagen Golf GTI'),
+('MTB003_04', 'MTB003', 'assets/img/MTB003/4.jpg', 'Volkswagen Golf GTI'),
+('MST004_01', 'MST004', 'assets/img/MST004/1.jpg', 'Dodge Viper ACR'),
+('MST004_02', 'MST004', 'assets/img/MST004/2.jpg', 'Dodge Viper ACR'),
+('MST004_03', 'MST004', 'assets/img/MST004/3.jpg', 'Dodge Viper ACR'),
+('MST004_04', 'MST004', 'assets/img/MST004/4.jpg', 'Dodge Viper ACR'),
+('TMC003_01', 'TMC003', 'assets/img/TMC003/1.jpg', 'Subaru BRZ'),
+('TMC003_02', 'TMC003', 'assets/img/TMC003/2.jpg', 'Subaru BRZ'),
+('TMC003_03', 'TMC003', 'assets/img/TMC003/3.jpg', 'Subaru BRZ'),
+('TMC003_04', 'TMC003', 'assets/img/TMC003/4.jpg', 'Subaru BRZ'),
+('BBR005_01', 'BBR005', 'assets/img/BBR005/1.jpg', 'Lamborghini Aventador'),
+('BBR005_02', 'BBR005', 'assets/img/BBR005/2.jpg', 'Lamborghini Aventador'),
+('BBR005_03', 'BBR005', 'assets/img/BBR005/3.jpg', 'Lamborghini Aventador'),
+('BBR005_04', 'BBR005', 'assets/img/BBR005/4.jpg', 'Lamborghini Aventador'),
+('AAT004_01', 'AAT004', 'assets/img/AAT004/1.jpg', 'Tesla Cybertruck'),
+('AAT004_02', 'AAT004', 'assets/img/AAT004/2.jpg', 'Tesla Cybertruck'),
+('AAT004_03', 'AAT004', 'assets/img/AAT004/3.jpg', 'Tesla Cybertruck'),
+('AAT004_04', 'AAT004', 'assets/img/AAT004/4.jpg', 'Tesla Cybertruck'),
+('GL004_01', 'GL004', 'assets/img/GL004/1.jpg', 'Jeep Grand Cherokee'),
+('GL004_02', 'GL004', 'assets/img/GL004/2.jpg', 'Jeep Grand Cherokee'),
+('GL004_03', 'GL004', 'assets/img/GL004/3.jpg', 'Jeep Grand Cherokee'),
+('GL004_04', 'GL004', 'assets/img/GL004/4.jpg', 'Jeep Grand Cherokee'),
+('KYO004_01', 'KYO004', 'assets/img/KYO004/1.jpg', 'Mazda MX‑5 Miata'),
+('KYO004_02', 'KYO004', 'assets/img/KYO004/2.jpg', 'Mazda MX‑5 Miata'),
+('KYO004_03', 'KYO004', 'assets/img/KYO004/3.jpg', 'Mazda MX‑5 Miata'),
+('KYO004_04', 'KYO004', 'assets/img/KYO004/4.jpg', 'Mazda MX‑5 Miata'),
+('AAT005_01', 'AAT005', 'assets/img/AAT005/1.jpg', 'Porsche Taycan'),
+('AAT005_02', 'AAT005', 'assets/img/AAT005/2.jpg', 'Porsche Taycan'),
+('AAT005_03', 'AAT005', 'assets/img/AAT005/3.jpg', 'Porsche Taycan'),
+('AAT005_04', 'AAT005', 'assets/img/AAT005/4.jpg', 'Porsche Taycan'),
+('MTB004_01', 'MTB004', 'assets/img/MTB004/1.jpg', 'Ford Bronco'),
+('MTB004_02', 'MTB004', 'assets/img/MTB004/2.jpg', 'Ford Bronco'),
+('MTB004_03', 'MTB004', 'assets/img/MTB004/3.jpg', 'Ford Bronco'),
+('MTB004_04', 'MTB004', 'assets/img/MTB004/4.jpg', 'Ford Bronco'),
+('HW005_01', 'AAT005', 'assets/img/AAT005/1.jpg', 'Mercedes‑AMG GT'),
+('HW005_02', 'HW005', 'assets/img/AAT005/2.jpg', 'Mercedes‑AMG GT'),
+('HW005_03', 'HW005', 'assets/img/AAT005/3.jpg', 'Mercedes‑AMG GT'),
+('HW005_04', 'HW005', 'assets/img/AAT005/4.jpg', 'Mercedes‑AMG GT'),
+('MST005_01', 'MST005', 'assets/img/MST005/1.jpg', 'Acura NSX'),
+('MST005_02', 'MST005', 'assets/img/MST005/2.jpg', 'Acura NSX'),
+('MST005_03', 'MST005', 'assets/img/MST005/3.jpg', 'Acura NSX'),
+('MST005_04', 'MST005', 'assets/img/MST005/4.jpg', 'Acura NSX'),
+('HW006_01', 'HW006', 'assets/img/HW005/1.jpg', 'Corvette Stingray'),
+('HW006_02', 'HW006', 'assets/img/HW005/2.jpg', 'Corvette Stingray'),
+('HW006_03', 'HW006', 'assets/img/HW005/3.jpg', 'Corvette Stingray'),
+('HW006_04', 'HW006', 'assets/img/HW005/4.jpg', 'Corvette Stingray'),
+('AAT006_01', 'AAT006', 'assets/img/AAT006/1.jpg', 'Rolls‑Royce Phantom'),
+('AAT006_02', 'AAT006', 'assets/img/AAT006/2.jpg', 'Rolls‑Royce Phantom'),
+('AAT006_03', 'AAT006', 'assets/img/AAT006/3.jpg', 'Rolls‑Royce Phantom'),
+('AAT006_04', 'AAT006', 'assets/img/AAT006/4.jpg', 'Rolls‑Royce Phantom'),
+('TMC004_01', 'TMC004', 'assets/img/TMC004/1.jpg', 'Subaru Outback'),
+('TMC004_02', 'TMC004', 'assets/img/TMC004/2.jpg', 'Subaru Outback'),
+('TMC004_03', 'TMC004', 'assets/img/TMC004/3.jpg', 'Subaru Outback'),
+('TMC004_04', 'TMC004', 'assets/img/TMC004/4.jpg', 'Subaru Outback');
+
+
+INSERT INTO accessory (accessoryId, accessoryName, detail, price, quantity, imageUrl) VALUES
+('ACS001', 'Carbon Fiber Spoiler', 'This lightweight carbon fiber spoiler is designed to enhance both the aerodynamic performance and visual appeal of your model car. Crafted with precision from high-quality carbon fiber materials, it offers a realistic racing look while improving stability and downforce in scaled simulations. Ideal for collectors and enthusiasts aiming to customize their models with professional-grade accessories, the spoiler fits most 1:24 and 1:18 scale models and adds a sleek, sporty finish to any display.', 29.99, 15, 'assets/img/ACS/ACS001.jpg'),
+('ACS002', 'LED Headlights Kit', 'These bright white LED headlights are specially designed for 1:24 scale model cars, adding a realistic and dynamic lighting effect to your collection. Featuring energy-efficient micro-LED technology, they are easy to install and provide consistent illumination without overheating. Ideal for night-scene displays or enhancing model realism, these headlights bring your miniature vehicles to life, making them perfect for hobbyists seeking professional-grade upgrades.', 15.50, 30, 'assets/img/ACS/ACS002.jpg'),
+('ACS003', 'Racing Decal Pack', 'This premium-quality decal pack is perfect for customizing your model cars with a professional racing look. It includes a variety of vibrant racing stripes, sponsor logos, and numbered sets to match popular race styles. Made from durable, easy-to-apply adhesive material, these decals adhere smoothly to most plastic surfaces without bubbling or peeling. Whether you are restoring a classic or building a custom racer, this set adds personality and realism to every model.', 7.25, 50, 'assets/img/ACS/ACS003.jpg'),
+('ACS004', 'Miniature Tool Set', 'This precision-crafted miniature tool set is an ideal addition to any detailed model car display or diorama. The set includes a realistic jack, wrench, and tire iron—all designed to scale with fine metallic finishes. Perfect for enhancing garage scenes or pit stop displays, each tool adds authenticity and charm. Whether you are a collector or hobbyist, these accessories bring a touch of realism and storytelling to your model environment.', 12.00, 20, 'assets/img/ACS/ACS004.jpg'),
+('ACS005', 'Model Display Case', 'This clear acrylic display case is designed to elegantly showcase and protect your prized model cars from dust, fingerprints, and damage. Featuring a durable transparent enclosure and a sleek black base, it provides a professional presentation while maintaining visibility from all angles. Ideal for collectors who value preservation and aesthetics, the case fits most 1:24 or 1:18 scale models and is a perfect finishing touch for any display shelf or exhibition setup.', 18.75, 10, 'assets/img/ACS/ACS005.jpg');
+
+
+CREATE TRIGGER TR_customer_cart_updated_at
+ON customer_cart
+AFTER UPDATE
+AS
+BEGIN
+    SET NOCOUNT ON;
+    UPDATE customer_cart 
+    SET updated_at = GETDATE()
+    FROM customer_cart cc
+    INNER JOIN inserted i ON cc.id = i.id;
+END;
 
 select *from modelCar
-select *from imageModel
 
+select *from imageModel
 
 select*from customer
 
 select*from customerAccount
 
 select *from brandModel
+
+select *from home_gallery
+
+select *from accessory
+
