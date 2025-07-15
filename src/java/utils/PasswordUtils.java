@@ -57,5 +57,12 @@ public class PasswordUtils {
         return hash.equals(hashedPassword);
     }
 
-    
+    public static void main(String[] args) {
+        System.out.println(encryptSHA256("admin123"));
+//        CustomerAccountDAO udao = new CustomerAccountDAO();
+//        List<CustomerAccount> list = udao.getAll();
+//        for (CustomerAccount u : list) {
+//            udao.updatePassword(u.getCustomerId(), encryptSHA256(u.getPassword()));
+//        }
+    }
 }

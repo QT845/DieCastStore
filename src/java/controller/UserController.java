@@ -146,30 +146,47 @@ public class UserController extends HttpServlet {
         String userName = request.getParameter("userName");
         String password = request.getParameter("password");
 
-        CustomerAccountDAO accountDAO = new CustomerAccountDAO();
-        CustomerDAO customerDAO = new CustomerDAO();
-
         if (isNullOrEmpty(userName) || isNullOrEmpty(password)) {
             request.setAttribute("message", "Please enter your User Name and Password!");
             return url;
         }
 
         try {
+            CustomerAccountDAO accountDAO = new CustomerAccountDAO();
+            CustomerDAO customerDAO = new CustomerDAO();
 
-            if (!accountDAO.isActiveUserByUserName(userName)) {
+            CustomerAccount account = accountDAO.getByUserName(userName);
+            if (account == null) {
+                session.setAttribute("message", "Username or password is incorrect!");
+                return url;
+            }
+
+            // Kiểm tra tài khoản bị ban
+            if (account.getRole() == 0 || !accountDAO.isActiveUserByUserName(userName)) {
                 session.setAttribute("message", "Your account has been banned.");
                 return url;
             }
 
-            if (!accountDAO.login(userName, password)) {
+            // Xác thực đăng nhập (trả về boolean)
+            boolean loginSuccess = accountDAO.login(userName, password);
+            if (!loginSuccess) {
                 session.setAttribute("message", "Username or password is incorrect!");
                 return url;
             }
-            CustomerAccount account = accountDAO.getByUserName(userName);
-            Customer customer = customerDAO.getById(account.getCustomerId());
 
+            // Đăng nhập thành công
+            Customer customer = customerDAO.getById(account.getCustomerId());
+            if (customer == null) {
+                session.setAttribute("message", "Customer information not found!");
+                return url;
+            }
+
+            session.setAttribute("user", account);
             session.setAttribute("account", account);
             session.setAttribute("customer", customer);
+            session.setAttribute("userName", account.getUserName());
+            session.setAttribute("customerId", account.getCustomerId());
+            session.setAttribute("role", account.getRole());
 
             // Gộp giỏ hàng
             Cart savedCart = cartDAO.getCartByCustomerId(account.getCustomerId());
@@ -536,7 +553,7 @@ public class UserController extends HttpServlet {
 
         } catch (Exception e) {
             e.printStackTrace();
-            request.setAttribute("checkError", "Error while getting account list: " + e.getMessage());
+            request.setAttribute("checkError", "❌ Error while getting account list: " + e.getMessage());
             return "manageAccounts.jsp";
         }
     }
@@ -549,12 +566,10 @@ public class UserController extends HttpServlet {
             String customerId = request.getParameter("customerId");
             int role = Integer.parseInt(request.getParameter("role"));
 
-            CustomerAccountDAO accountDAO = new CustomerAccountDAO();
-            CustomerAccount account = accountDAO.getById(customerId);
-            
-            boolean updated = accountDAO.update(account);
+            CustomerAccountDAO dao = new CustomerAccountDAO();
+            boolean updated = dao.setUserRole(customerId, role);
 
-            List<CustomerAccount> accounts = accountDAO.getAll();
+            List<CustomerAccount> accounts = dao.getAll();
             request.setAttribute("accounts", accounts);
             request.setAttribute("customers", customers);
             request.setAttribute("isLoggedIn", AuthUtils.isLoggedIn(request));
@@ -565,15 +580,15 @@ public class UserController extends HttpServlet {
             // Chỉ báo cho đúng user vừa cập nhật
             if (updated) {
                 request.setAttribute("updatedUserId", customerId);
-                request.setAttribute("message", "Permissions updated successfully.");
+                request.setAttribute("message", "✅ Permissions updated successfully.");
             } else {
                 request.setAttribute("updatedUserId", customerId);
-                request.setAttribute("checkError", "Unable to update permissions.");
+                request.setAttribute("checkError", "❌ Unable to update permissions.");
             }
 
         } catch (Exception e) {
             e.printStackTrace();
-            request.setAttribute("checkError", "Error updating permissions: " + e.getMessage());
+            request.setAttribute("checkError", "❌ Error updating permissions: " + e.getMessage());
         }
 
         return "manageAccounts.jsp";

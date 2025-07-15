@@ -1,0 +1,43 @@
+body {
+    font-family: Arial, sans-serif;
+    background-color: #e3f2fd;
+}
+
+.product-card {
+    transition: transform 0.3s, box-shadow 0.3s;
+    border-radius: 10px;
+    background-color: #fff;
+}
+
+.product-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+}
+
+.product-img {
+    height: 200px;
+    object-fit: contain;
+    padding: 10px;
+    background-color: #f8f9fa;
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
+}
+
+.product-name {
+    font-weight: 600;
+    font-size: 1rem;
+    min-height: 48px;
+    margin-bottom: 10px;
+}
+
+.product-price {
+    font-weight: bold;
+    color: #dc3545;
+    font-size: 1.1rem;
+}
+
+.social-media-wrapper img:hover,
+.brand-slider-wrapper img:hover {
+    transform: scale(1.1);
+    transition: transform 0.3s;
+}
