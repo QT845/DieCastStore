@@ -28,10 +28,10 @@
                 <title>Product Detail</title>
             </c:otherwise>
         </c:choose>
-        <link rel="stylesheet" href="assets/CSS/productDetail.css">
+        <link rel="stylesheet" href="assets/css/productDetail.css">
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-        <script src="assets/JS/productDetail.js"></script>
+        <script src="assets/js/productDetail.js"></script>
     </head>
     <body style="background: #e3f2fd;">
         <jsp:include page="header.jsp" />

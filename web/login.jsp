@@ -10,7 +10,7 @@
         <!-- Bootstrap CSS -->
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
         <!-- Custom CSS -->
-        <link rel="stylesheet" href="assets/CSS/login.css">
+        <link rel="stylesheet" href="assets/css/login.css">
     </head>
     <body>
         <c:if test="${not empty sessionScope.account}">
@@ -86,5 +86,5 @@
         <!-- Bootstrap JS -->
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     </body>
-    <script src="assets/JS/login.js"></script>
+    <script src="assets/js/login.js"></script>
 </html>
