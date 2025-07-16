@@ -35,7 +35,7 @@
 
                                 <c:if test="${not isAdmin and isCancelable}">
                                     <a href="MainController?action=editProfile" class="btn btn-sm btn-outline-primary">
-                                        ✏️ Update Information
+                                        Update Information
                                     </a>
                                 </c:if>
                             </div>
@@ -86,7 +86,7 @@
                     <div class="mt-4">
                         <c:choose>
                             <c:when test="${not isAdmin}">
-                                <a href="order?action=list" class="btn btn-outline-secondary me-2">← Back to My Orders</a>
+                                <a href="order?action=list" class="btn btn-outline-secondary me-2">Back to My Orders</a>
                                 <c:if test="${isCancelable}">
                                     <a href="order?action=cancel&amp;orderId=${order.orderId}" 
                                        class="btn btn-outline-danger"

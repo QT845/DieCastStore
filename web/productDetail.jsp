@@ -1,21 +1,7 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
-<%@ page import="model.ModelCar" %>
-<%@ page import="model.Accessory" %>
-<%@ page import="dao.ModelCarDAO" %>
-<%@ page import="model.ImageModel" %>
-<%@ page import="model.BrandModel" %>
-<%@ page import="java.util.List" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
-
-<%
-    String checkError = (String) request.getAttribute("checkError");
-    String message = (String) request.getAttribute("message");
-    ModelCar product = (ModelCar) request.getAttribute("productDetail");
-    Accessory accessory = (Accessory) request.getAttribute("accessoryDetail");
-%>
-
 
 <!DOCTYPE html>
 <html>
@@ -42,13 +28,7 @@
                 <c:set var="imageUrl" value="${not empty images ? images[0].imageUrl : ''}" />
 
                 <div class="detail-container">
-                    <c:if test="${not empty checkError}">
-                        <div class="alert alert-danger mt-3">${checkError}</div>
-                    </c:if>
-                    <c:if test="${not empty message}">
-                        <div class="alert alert-success mt-3">${message}</div>
-                    </c:if>
-
+                    
                     <div class="product-top">
                         <div>
                             <img class="detail-image" id="mainImage" src="${imageUrl}" alt="${productDetail.modelName}" />

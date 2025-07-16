@@ -35,6 +35,21 @@
                             <strong>${message}</strong>
                         </div>
                     </c:if>
+                    <c:if test="${not empty checkErrorAddToCart}">
+                        <div class="error-alert">
+                            <strong>${checkErrorAddToCart}</strong>
+                        </div>
+                    </c:if>
+                    <c:if test="${not empty checkErrorPurchase}">
+                        <div class="error-alert">
+                            <strong>${checkErrorPurchase}</strong>
+                        </div>
+                    </c:if>
+                    <c:if test="${not empty checkError}">
+                        <div class="error-alert">
+                            <strong>${checkError}</strong>
+                        </div>
+                    </c:if>
 
                     <!-- Login Form -->
                     <form action="UserController" method="post">

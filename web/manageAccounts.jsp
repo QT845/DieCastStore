@@ -1,8 +1,4 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
-<%@ page import="java.util.List" %>
-<%@ page import="model.CustomerAccount" %>
-<%@ page import="model.Customer" %>
-<%@ page import="utils.AuthUtils" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
 
@@ -22,7 +18,7 @@
                 <c:choose>
                     <c:when test="${isAdmin}">
                         <div class="table-container">
-                            <h2 class="mb-4 text-center text-primary fw-bold">🧑‍💻 Customer Account Management</h2>
+                            <h2 class="mb-4 text-center text-primary fw-bold">Customer Account Management</h2>
 
                             <!-- Alert Messages -->
                             <c:choose>
@@ -42,15 +38,15 @@
                                         </c:otherwise>
                                     </c:choose>
                                 </c:when>
-                                <c:when test="${not empty message}">
+                                <c:when test="${not empty messageiewAccount}">
                                     <div class="alert alert-success alert-dismissible fade show text-center shadow-sm rounded" role="alert">
-                                        ${message}
+                                        ${messageiewAccount}
                                         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                                     </div>
                                 </c:when>
-                                <c:when test="${not empty checkError}">
+                                <c:when test="${not empty checkErrorViewAccount}">
                                     <div class="alert alert-danger alert-dismissible fade show text-center shadow-sm rounded" role="alert">
-                                        ${checkError}
+                                        ${checkErrorViewAccount}
                                         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                                     </div>
                                 </c:when>
@@ -71,45 +67,47 @@
                                     <c:choose>
                                         <c:when test="${not empty accounts}">
                                             <c:forEach var="acc" items="${accounts}">
-                                                <c:set var="fullName" value="Unknown" />
-                                                <c:set var="address" value="Unknown" />
-                                                <c:forEach var="cus" items="${customers}">
-                                                    <c:if test="${cus.customerId == acc.customerId}">
-                                                        <c:set var="fullName" value="${cus.customerName}" />
-                                                        <c:set var="address" value="${cus.address}" />
-                                                    </c:if>
-                                                </c:forEach>
+                                                <c:if test="${acc.role != 1}">
+                                                    <c:set var="fullName" value="Unknown" />
+                                                    <c:set var="address" value="Unknown" />
+                                                    <c:forEach var="cus" items="${customers}">
+                                                        <c:if test="${cus.customerId == acc.customerId}">
+                                                            <c:set var="fullName" value="${cus.customerName}" />
+                                                            <c:set var="address" value="${cus.address}" />
+                                                        </c:if>
+                                                    </c:forEach>
 
-                                                <tr>
-                                                    <td class="text-center">${acc.customerId}</td>
-                                                    <td>${fullName}</td>
-                                                    <td>${address}</td>
-                                                    <td class="text-center">
-                                                        <c:choose>
-                                                            <c:when test="${acc.role == 0}">
-                                                                <span class="badge bg-danger">Banned</span>
-                                                            </c:when>
-                                                            <c:when test="${acc.role == 1}">
-                                                                <span class="badge bg-primary">Admin</span>
-                                                            </c:when>
-                                                            <c:otherwise>
-                                                                <span class="badge bg-secondary">User</span>
-                                                            </c:otherwise>
-                                                        </c:choose>
-                                                    </td>
-                                                    <td class="text-center">
-                                                        <form method="post" action="MainController" class="d-flex align-items-center justify-content-center gap-2">
-                                                            <input type="hidden" name="action" value="updateRole" />
-                                                            <input type="hidden" name="customerId" value="${acc.customerId}" />
-                                                            <select name="role" class="form-select form-select-sm w-auto rounded">
-                                                                <option value="0" <c:if test="${acc.role == 0}">selected</c:if>>0 - Banned</option>
-                                                                <option value="1" <c:if test="${acc.role == 1}">selected</c:if>>1 - Admin</option>
-                                                                <option value="2" <c:if test="${acc.role == 2}">selected</c:if>>2 - User</option>
-                                                                </select>
-                                                                <button type="submit" class="btn btn-sm btn-outline-success rounded px-3">Update</button>
-                                                            </form>
+                                                    <tr>
+                                                        <td class="text-center">${acc.customerId}</td>
+                                                        <td>${fullName}</td>
+                                                        <td>${address}</td>
+                                                        <td class="text-center">
+                                                            <c:choose>
+                                                                <c:when test="${acc.role == 0}">
+                                                                    <span class="badge bg-danger">Banned</span>
+                                                                </c:when>
+                                                                <c:when test="${acc.role == 1}">
+                                                                    <span class="badge bg-primary">Admin</span>
+                                                                </c:when>
+                                                                <c:otherwise>
+                                                                    <span class="badge bg-secondary">User</span>
+                                                                </c:otherwise>
+                                                            </c:choose>
                                                         </td>
-                                                    </tr>
+                                                        <td class="text-center">
+                                                            <form method="post" action="MainController" class="d-flex align-items-center justify-content-center gap-2">
+                                                                <input type="hidden" name="action" value="updateRole" />
+                                                                <input type="hidden" name="customerId" value="${acc.customerId}" />
+                                                                <select name="role" class="form-select form-select-sm w-auto rounded">
+                                                                    <option value="0" <c:if test="${acc.role == 0}">selected</c:if>>0 - Banned</option>
+                                                                    <option value="1" <c:if test="${acc.role == 1}">selected</c:if>>1 - Admin</option>
+                                                                    <option value="2" <c:if test="${acc.role == 2}">selected</c:if>>2 - User</option>
+                                                                    </select>
+                                                                    <button type="submit" class="btn btn-sm btn-outline-success rounded px-3">Update</button>
+                                                                </form>
+                                                            </td>
+                                                        </tr>
+                                                </c:if>
                                             </c:forEach>
                                         </c:when>
                                         <c:otherwise>

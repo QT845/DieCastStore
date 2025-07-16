@@ -23,6 +23,7 @@ import model.Cart;
 import model.CartItem;
 import model.CustomerAccount;
 import model.ModelCar;
+import utils.AuthUtils;
 
 /**
  *
@@ -117,9 +118,7 @@ public class CheckoutController extends HttpServlet {
     private void showCheckout(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
         HttpSession session = request.getSession();
 
-        // Kiểm tra đăng nhập 
-        CustomerAccount user = (CustomerAccount) session.getAttribute("user");
-        if (user == null) {
+        if (!AuthUtils.isLoggedIn(request)) {
             request.setAttribute("error", "Please login to pay");
             response.sendRedirect("login.jsp");
             return;
@@ -176,6 +175,7 @@ public class CheckoutController extends HttpServlet {
         }
 
         request.setAttribute("cart", checkoutCart);
+        session.setAttribute("cartSize", checkoutCart.getTotalQuantity());
         request.setAttribute("totalAmount", checkoutCart.getTotalAmount());
         request.setAttribute("isBuyNow", isBuyNow);
         request.getRequestDispatcher("checkout.jsp").forward(request, response);
@@ -223,8 +223,8 @@ public class CheckoutController extends HttpServlet {
         HttpSession session = request.getSession();
 
         // Kiểm tra đăng nhập
-        CustomerAccount user = (CustomerAccount) session.getAttribute("user");
-        if (user == null) {
+        CustomerAccount user = AuthUtils.getCurrentUser(request);
+        if (!AuthUtils.isLoggedIn(request)) {
             request.setAttribute("error", "Please login to pay");
             request.getRequestDispatcher("login.jsp").forward(request, response);
             return;
@@ -326,6 +326,7 @@ public class CheckoutController extends HttpServlet {
             if (isBuyNow) {
                 session.removeAttribute("buyNowCart");
                 session.removeAttribute("isBuyNow");
+                session.setAttribute("cartSize", checkoutCart.getTotalQuantity());
             } else if (isSelectedCheckout) {
                 Cart mainCart = (Cart) session.getAttribute("cart");
                 if (mainCart != null) {
@@ -334,6 +335,7 @@ public class CheckoutController extends HttpServlet {
                         cartDAO.removeCartItem(customerId, selected.getItemType(), selected.getItemId());
                     }
                     session.setAttribute("cart", mainCart);
+                    session.setAttribute("cartSize", mainCart.getTotalQuantity());
                 }
                 session.removeAttribute("selectedCart");
                 session.removeAttribute("isSelectedCheckout");
@@ -342,6 +344,7 @@ public class CheckoutController extends HttpServlet {
                 if (mainCart != null) {
                     mainCart.clearCart();
                     session.setAttribute("cart", mainCart);
+                    session.setAttribute("cartSize", mainCart.getTotalQuantity());
                 }
                 cartDAO.clearCart(customerId);
             }
@@ -355,7 +358,7 @@ public class CheckoutController extends HttpServlet {
 
         } catch (Exception e) {
             e.printStackTrace();
-            setCheckoutAttributes(request, response, checkoutCart, isBuyNow, "Invalid phone number!");
+            setCheckoutAttributes(request, response, checkoutCart, isBuyNow, "An error occurred while processing your order.");
         }
     }
 
@@ -373,8 +376,8 @@ public class CheckoutController extends HttpServlet {
         HttpSession session = request.getSession();
 
         // Kiểm tra đăng nhập
-        CustomerAccount user = (CustomerAccount) session.getAttribute("user");
-        if (user == null) {
+        CustomerAccount user = AuthUtils.getCurrentUser(request);
+        if (!AuthUtils.isLoggedIn(request)) {
             request.setAttribute("error", "Please login to pay");
             response.sendRedirect("login.jsp");
             return;

@@ -90,7 +90,6 @@ public class UserController extends HttpServlet {
                     request.getRequestDispatcher(url).forward(request, response);
                 } catch (Exception ex) {
                     ex.printStackTrace(); // log lỗi
-                    // KHÔNG gọi sendError ở đây nữa vì response có thể đã bị gửi
                 }
             } else {
                 // fallback an toàn nếu url null trước khi forward
@@ -140,38 +139,37 @@ public class UserController extends HttpServlet {
     }// </editor-fold>
 
     private String handleLogin(HttpServletRequest request, HttpServletResponse response) {
-        String url = LOGIN_PAGE;
         HttpSession session = request.getSession();
 
         String userName = request.getParameter("userName");
         String password = request.getParameter("password");
 
-        CustomerAccountDAO accountDAO = new CustomerAccountDAO();
-        CustomerDAO customerDAO = new CustomerDAO();
-
         if (isNullOrEmpty(userName) || isNullOrEmpty(password)) {
             request.setAttribute("message", "Please enter your User Name and Password!");
-            return url;
+            return LOGIN_PAGE;
         }
 
         try {
+            CustomerAccountDAO accountDAO = new CustomerAccountDAO();
+            CustomerDAO customerDAO = new CustomerDAO();
 
             if (!accountDAO.isActiveUserByUserName(userName)) {
                 session.setAttribute("message", "Your account has been banned.");
-                return url;
+                return LOGIN_PAGE;
             }
 
-            if (!accountDAO.login(userName, password)) {
+            boolean loginSuccess = accountDAO.login(userName, password);
+            if (!loginSuccess) {
                 session.setAttribute("message", "Username or password is incorrect!");
-                return url;
+                return LOGIN_PAGE;
             }
             CustomerAccount account = accountDAO.getByUserName(userName);
             Customer customer = customerDAO.getById(account.getCustomerId());
 
+//            session.setAttribute("user", account);
             session.setAttribute("account", account);
             session.setAttribute("customer", customer);
 
-            // Gộp giỏ hàng
             Cart savedCart = cartDAO.getCartByCustomerId(account.getCustomerId());
             Cart sessionCart = (Cart) session.getAttribute("cart");
 
@@ -184,13 +182,13 @@ public class UserController extends HttpServlet {
             }
 
             session.setAttribute("cart", savedCart);
+            session.setAttribute("cartSize", savedCart.getTotalQuantity());
 
-            // Redirect nếu có
             String redirectAfterLogin = (String) session.getAttribute("redirectAfterLogin");
             if (redirectAfterLogin != null) {
                 session.removeAttribute("redirectAfterLogin");
                 response.sendRedirect(redirectAfterLogin);
-                return null; // đã redirect
+                return null;
             }
 
             return WELCOME_PAGE;
@@ -524,8 +522,8 @@ public class UserController extends HttpServlet {
             String message = (String) request.getAttribute("message");
             String updatedUserId = (String) request.getAttribute("updatedUserId");
 
-            request.setAttribute("checkError", checkError);
-            request.setAttribute("message", message);
+            request.setAttribute("checkErrorViewAccount", checkError);
+            request.setAttribute("messageViewAccount", message);
             request.setAttribute("updatedUserId", updatedUserId);
 
             // Gửi các thông điệp hỗ trợ khi bị chặn truy cập (dùng trong JSTL)
@@ -536,7 +534,7 @@ public class UserController extends HttpServlet {
 
         } catch (Exception e) {
             e.printStackTrace();
-            request.setAttribute("checkError", "Error while getting account list: " + e.getMessage());
+            request.setAttribute("checkError", " Error while getting account list: " + e.getMessage());
             return "manageAccounts.jsp";
         }
     }
@@ -549,12 +547,10 @@ public class UserController extends HttpServlet {
             String customerId = request.getParameter("customerId");
             int role = Integer.parseInt(request.getParameter("role"));
 
-            CustomerAccountDAO accountDAO = new CustomerAccountDAO();
-            CustomerAccount account = accountDAO.getById(customerId);
-            
-            boolean updated = accountDAO.update(account);
+            CustomerAccountDAO dao = new CustomerAccountDAO();
+            boolean updated = dao.setUserRole(customerId, role);
 
-            List<CustomerAccount> accounts = accountDAO.getAll();
+            List<CustomerAccount> accounts = dao.getAll();
             request.setAttribute("accounts", accounts);
             request.setAttribute("customers", customers);
             request.setAttribute("isLoggedIn", AuthUtils.isLoggedIn(request));
@@ -565,15 +561,15 @@ public class UserController extends HttpServlet {
             // Chỉ báo cho đúng user vừa cập nhật
             if (updated) {
                 request.setAttribute("updatedUserId", customerId);
-                request.setAttribute("message", "Permissions updated successfully.");
+                request.setAttribute("messageUpdateRole", " Permissions updated successfully.");
             } else {
                 request.setAttribute("updatedUserId", customerId);
-                request.setAttribute("checkError", "Unable to update permissions.");
+                request.setAttribute("checkErrorUpdateRole", " Unable to update permissions.");
             }
 
         } catch (Exception e) {
             e.printStackTrace();
-            request.setAttribute("checkError", "Error updating permissions: " + e.getMessage());
+            request.setAttribute("checkError", " Error updating permissions: " + e.getMessage());
         }
 
         return "manageAccounts.jsp";

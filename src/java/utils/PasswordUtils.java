@@ -22,13 +22,10 @@ public class PasswordUtils {
             return null;
         }
         try {
-            // Tạo MessageDigest instance cho SHA-256
             MessageDigest md = MessageDigest.getInstance("SHA-256");
 
-            // Chuyển đổi password thành byte array và hash
             byte[] hashBytes = md.digest(password.getBytes(StandardCharsets.UTF_8));
 
-            // Chuyển đổi byte array thành hex string
             StringBuilder hexString = new StringBuilder();
             for (byte hashByte : hashBytes) {
                 String hex = Integer.toHexString(0xff & hashByte);
@@ -56,6 +53,4 @@ public class PasswordUtils {
         String hash = encryptSHA256(plainPassword);
         return hash.equals(hashedPassword);
     }
-
-    
 }

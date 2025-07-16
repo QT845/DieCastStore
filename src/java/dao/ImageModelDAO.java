@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import model.ImageModel;
+import model.ImageModel;
 import utils.DBUtils;
 
 /**
@@ -36,6 +37,13 @@ public class ImageModelDAO implements IDAO<ImageModel, String> {
         } catch (Exception e) {
             System.err.println("Error closing resources: " + e.getMessage());
             e.printStackTrace();
+        }
+    }
+
+    public void deleteImagesByModelId(String modelId) throws SQLException, ClassNotFoundException {
+        try ( Connection conn = DBUtils.getConnection();  PreparedStatement ps = conn.prepareStatement("DELETE FROM ImageModel WHERE modelId = ?")) {
+            ps.setString(1, modelId);
+            ps.executeUpdate();
         }
     }
 

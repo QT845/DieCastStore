@@ -27,14 +27,4 @@ public class DBUtils {
         c = DriverManager.getConnection(url, DB_Username, DB_Password);
         return c;
     }
-    
-    public static void main(String[] args) {
-        try {
-            System.out.println(DBUtils.getConnection());
-        } catch (ClassNotFoundException ex) {
-            Logger.getLogger(DBUtils.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (SQLException ex) {
-            Logger.getLogger(DBUtils.class.getName()).log(Level.SEVERE, null, ex);
-        }
-    }
 }

@@ -16,6 +16,7 @@ import model.Cart;
 import model.CartItem;
 import model.CustomerAccount;
 import model.ModelCar;
+import utils.AuthUtils;
 
 @WebServlet(name = "CartController", urlPatterns = {"/cart", "/CartController"})
 public class CartController extends HttpServlet {
@@ -121,7 +122,7 @@ public class CartController extends HttpServlet {
 
         if (cart == null) {
             cart = new Cart();
-            session.setAttribute("cart", cart);
+            updateSessionCart(session, cart);
         }
 
         addInventoryStatusToCart(cart);
@@ -133,10 +134,10 @@ public class CartController extends HttpServlet {
     private void addToCart(HttpServletRequest request, HttpServletResponse response) throws IOException {
         try {
             HttpSession session = request.getSession();
-            CustomerAccount user = (CustomerAccount) session.getAttribute("user");
+            CustomerAccount account = AuthUtils.getCurrentUser(request);
 
-            if (user == null) {
-                session.setAttribute("message", "Please login to add products to cart");
+            if (!AuthUtils.isLoggedIn(request)) {
+                session.setAttribute("checkErrorAddToCart", "Please login to add products to cart");
 
                 String referer = request.getHeader("Referer");
                 if (referer != null) {
@@ -203,7 +204,7 @@ public class CartController extends HttpServlet {
             cart.addItem(itemType, itemId, itemName, unitPrice, quantity);
             CartItem newItem = new CartItem(itemType, itemId, itemName, unitPrice, quantity);
 
-            boolean saved = cartDAO.saveCartItem(user.getCustomerId(), newItem);
+            boolean saved = cartDAO.saveCartItem(account.getCustomerId(), newItem);
             if (!saved) {
                 cart.removeItem(itemType, itemId);
                 session.setAttribute("cart", cart);
@@ -212,7 +213,7 @@ public class CartController extends HttpServlet {
                 return;
             }
 
-            session.setAttribute("cart", cart);
+            updateSessionCart(session, cart);
 
             if (quantity > availableQuantity) {
                 session.setAttribute("successMessage", "Product added to cart. But requested quantity (" + quantity
@@ -240,17 +241,17 @@ public class CartController extends HttpServlet {
             int newQuantity = Integer.parseInt(request.getParameter("quantity"));
 
             HttpSession session = request.getSession();
-            CustomerAccount user = (CustomerAccount) session.getAttribute("user");
+            CustomerAccount account = AuthUtils.getCurrentUser(request);
             Cart cart = (Cart) session.getAttribute("cart");
 
             if (cart != null) {
                 if (newQuantity <= 0) {
                     cart.removeItem(itemType, itemId);
                     // Xóa khỏi database
-                    if (user != null) {
-                        cartDAO.removeCartItem(user.getCustomerId(), itemType, itemId);
+                    if (account != null) {
+                        cartDAO.removeCartItem(account.getCustomerId(), itemType, itemId);
                     }
-                    session.setAttribute("cart", cart);
+                    updateSessionCart(session, cart);
                     session.setAttribute("successMessage", "Product removed from cart");
                 } else {
                     int currentAvailableQuantity = getCurrentInventoryQuantity(itemType, itemId);
@@ -266,10 +267,10 @@ public class CartController extends HttpServlet {
                         session.setAttribute("errorMessage", "Product does not exist in cart");
                     } else if (currentAvailableQuantity < 0) {
                         cart.removeItem(itemType, itemId);
-                        if (user != null) {
-                            cartDAO.removeCartItem(user.getCustomerId(), itemType, itemId);
+                        if (account != null) {
+                            cartDAO.removeCartItem(account.getCustomerId(), itemType, itemId);
                         }
-                        session.setAttribute("cart", cart);
+                        updateSessionCart(session, cart);
                         session.setAttribute("errorMessage", "The product no longer exists and has been removed from the cart.");
                     } else if (currentAvailableQuantity == 0) {
                         session.setAttribute("errorMessage", "The product is out of stock. Please choose another product or remove from cart.");
@@ -280,18 +281,18 @@ public class CartController extends HttpServlet {
                         int oldQuantity = currrentItem.getQuantity();
                         cart.updateQuantity(itemType, itemId, newQuantity);
 
-                        if (user != null) {
-                            boolean updateSuccess = cartDAO.updateCartItemQuantity(user.getCustomerId(), itemType, itemId, newQuantity);
+                        if (account != null) {
+                            boolean updateSuccess = cartDAO.updateCartItemQuantity(account.getCustomerId(), itemType, itemId, newQuantity);
                             if (updateSuccess) {
-                                session.setAttribute("cart", cart);
+                                updateSessionCart(session, cart);
                                 session.setAttribute("successMessage", "Product quantity updated");
                             } else {
                                 cart.updateQuantity(itemType, itemId, newQuantity);
-                                session.setAttribute("cart", cart);
+                                updateSessionCart(session, cart);
                                 session.setAttribute("errorMessage", "Unable to update quantity. Please try again.");
                             }
                         } else {
-                            session.setAttribute("cart", cart);
+                            updateSessionCart(session, cart);
                             session.setAttribute("successMessage", "Product quantity updated");
                         }
                     }
@@ -309,18 +310,23 @@ public class CartController extends HttpServlet {
         response.sendRedirect("cart?action=view");
     }
 
+    private void updateSessionCart(HttpSession session, Cart cart) {
+        session.setAttribute("cart", cart);
+        session.setAttribute("cartSize", cart.getTotalQuantity());
+    }
+
     private void removeFromCart(HttpServletRequest request, HttpServletResponse response) throws IOException {
         String itemType = request.getParameter("itemType");
         String itemId = request.getParameter("itemId");
 
         HttpSession session = request.getSession();
-        CustomerAccount user = (CustomerAccount) session.getAttribute("user");
+        CustomerAccount user = AuthUtils.getCurrentUser(request);
 
         Cart cart = (Cart) session.getAttribute("cart");
 
         if (cart != null) {
             cart.removeItem(itemType, itemId);
-            session.setAttribute("cart", cart);
+            updateSessionCart(session, cart);
 
             // Xóa khỏi database
             if (user != null) {
@@ -334,13 +340,13 @@ public class CartController extends HttpServlet {
 
     private void clearCart(HttpServletRequest request, HttpServletResponse response) throws IOException {
         HttpSession session = request.getSession();
-        CustomerAccount user = (CustomerAccount) session.getAttribute("user");
+        CustomerAccount user = AuthUtils.getCurrentUser(request);
 
         Cart cart = (Cart) session.getAttribute("cart");
 
         if (cart != null) {
             cart.clearCart();
-            session.setAttribute("cart", cart);
+            updateSessionCart(session, cart);
             // Xóa khỏi database
             if (user != null) {
                 cartDAO.clearCart(user.getCustomerId());
@@ -355,10 +361,9 @@ public class CartController extends HttpServlet {
         try {
 
             HttpSession session = request.getSession();
-            CustomerAccount user = (CustomerAccount) session.getAttribute("user");
 
-            if (user == null) {
-                session.setAttribute("message", "Please login to purchase");
+            if (!AuthUtils.isLoggedIn(request)) {
+                session.setAttribute("checkErrorPurchase", "Please login to purchase");
                 String referer = request.getHeader("Referer");
                 if (referer != null) {
                     session.setAttribute("redirectAfterLogin", referer);
@@ -431,6 +436,7 @@ public class CartController extends HttpServlet {
             buyNowCart.addItem(itemType, itemId, itemName, unitPrice, quantity);
 
             session.setAttribute("buyNowCart", buyNowCart);
+            session.setAttribute("cartSize", buyNowCart.getTotalQuantity());
             session.setAttribute("isBuyNow", true);
 
             response.sendRedirect("checkout?action=show");
@@ -469,7 +475,7 @@ public class CartController extends HttpServlet {
                 Accessory accessory = accessoryDAO.getById(item.getItemId());
                 if (accessory != null) {
                     availableQuantity = accessory.getQuantity();
-                    if(accessory.getImageUrl() != null && !accessory.getImageUrl().isEmpty()) {
+                    if (accessory.getImageUrl() != null && !accessory.getImageUrl().isEmpty()) {
                         imageUrl = accessory.getImageUrl();
                     }
                 } else {
@@ -481,7 +487,7 @@ public class CartController extends HttpServlet {
             item.setAvailableQuantity(availableQuantity);
             item.setItemExists(itemExists);
             item.setInStock(availableQuantity >= item.getQuantity());
-            item.setImageUrl(imageUrl); // ✅ Gán ảnh vào CartItem
+            item.setImageUrl(imageUrl);
         }
     }
 
