@@ -95,6 +95,7 @@
                             </button>
                         </form>
                     </div>
+                    <a href="MainController?action=showForgotPassword">Forgot Password?</a>
                 </div>
             </div>
         </div>

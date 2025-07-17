@@ -25,7 +25,6 @@ public class BrandDAO implements IDAO<BrandModel, Integer> {
     private static final String CREATE = "INSERT INTO brandModel(brandName) VALUES (?)";
     private static final String UPDATE = "UPDATE brandModel SET brandName = ? WHERE brandId = ?";
     private static final String DELETE = "DELETE FROM brandModel WHERE brandId = ?";
-    private static final String COUNT = "SELECT COUNT(*) FROM brandModel";
 
     @Override
     public boolean create(BrandModel entity) {
