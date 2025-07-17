@@ -6,8 +6,8 @@
         <title>Edit Home Content</title>
         <!-- Bootstrap 5 -->
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-        <link rel="stylesheet" href="assets/CSS/editHome.css">
-        <script src="assets/JS/editHome.js"></script>
+        <link rel="stylesheet" href="assets/css/editHome.css">
+        <script src="assets/js/editHome.js"></script>
     </head>
     <body>
 
@@ -26,14 +26,14 @@
             <div class="row justify-content-center">
                 <div class="col-lg-8 col-md-10">
                     <div class="form-section">
-                        <h2 class="section-title">📸 Edit Home Banner / Gallery</h2>
+                        <h2 class="section-title">Edit Home Banner / Gallery</h2>
 
                         <form action="UploadHomeImgController" method="post" enctype="multipart/form-data">
                             <input type="hidden" name="action" value="upload" />
 
                             <!-- Upload Type -->
                             <div class="mb-4">
-                                <label for="type" class="form-label fw-semibold">🗂️ Select upload type</label>
+                                <label for="type" class="form-label fw-semibold">Select upload type</label>
                                 <select name="type" id="type" class="form-select" onchange="toggleDescription()">
                                     <option value="gallery" <%= "gallery".equals(selectedType) ? "selected" : "" %>>Gallery</option>
                                     <option value="banner" <%= "banner".equals(selectedType) ? "selected" : "" %>>Banner</option>

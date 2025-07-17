@@ -1,13 +1,13 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
-<%@ page import="java.util.*" %>
+<%@page import="utils.AuthUtils"%>
 <!DOCTYPE html>
 <html>
     <head>
         <meta charset="UTF-8">
         <title><c:choose><c:when test="${not empty product}">Update Product</c:when><c:otherwise>Add New Product</c:otherwise></c:choose></title>
-                <link rel="stylesheet" href="assets/CSS/productsUpdate.css">
+                <link rel="stylesheet" href="assets/css/productsUpdate.css">
                 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
             </head>
             <body style="background: #e3f2fd;">
@@ -20,12 +20,25 @@
                 <c:set var="numberOfImageInputs" value="4" />
 
                 <div class="container mt-3">
-                    <c:if test="${not empty checkError}">
-                        <div class="alert alert-danger">${checkError}</div>
+                    <c:if test="${not empty checkErrorAddProduct}">
+                        <div class="alert alert-danger">${checkErrorAddProduct}</div>
                     </c:if>
-                    <c:if test="${not empty message}">
-                        <div class="alert alert-success">${message}</div>
+                    <c:if test="${not empty messageAddProduct}">
+                        <div class="alert alert-success">${messageAddProduct}</div>
                     </c:if>
+                    <c:if test="${not empty checkErrorUpdateProductMain}">
+                        <div class="alert alert-danger">${checkErrorUpdateProductMain}</div>
+                    </c:if>
+                    <c:if test="${not empty messageUpdateProductMain}">
+                        <div class="alert alert-success">${messageUpdateProductMain}</div>
+                    </c:if>
+                    <c:if test="${not empty checkErrorUpdateProductImage}">
+                        <div class="alert alert-danger">${checkErrorUpdateProductImage}</div>
+                    </c:if>
+                    <c:if test="${not empty messageUpdateProductImage}">
+                        <div class="alert alert-success">${messageUpdateProductImage}</div>
+                    </c:if>
+
                 </div>
 
                 <div class="form-image-container container">
@@ -170,6 +183,8 @@
             <c:otherwise>
                 <div class="container access-denied">
                     <h2 class="text-danger">Access Denied</h2>
+                    <c:out value="isLoggedIn: ${isLoggedIn}" /><br />
+                    <c:out value="isAdmin: ${isAdmin}" /><br />
                     <p>${accessDeniedMessage}</p>
                     <a href="${loginURL}" class="btn btn-primary mt-2">Login Now</a>
                 </div><br />

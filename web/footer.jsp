@@ -1,5 +1,5 @@
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
-<link rel="stylesheet" href="assets/CSS/footer.css">
+<link rel="stylesheet" href="assets/css/footer.css">
 <footer>
     <div class="footer-container">
         <!-- Company description -->
@@ -12,7 +12,7 @@
         <div class="contact-info">
             <h3><a href="contact.jsp" style="color: inherit; text-decoration: none;">Contact</a></h3>
             <p>📍 7 D1 Street, Long Thanh My, Thu Duc, Ho Chi Minh City</p>
-            <p>✉️ support@bqtstore.com</p>
+            <p>✉️ support_bqtstore@gmail.com</p>
             <p>📞 0123 456 789</p><br>
             <h3>Connect</h3>
             <div class="brand" style="display: flex; justify-content: flex-start; gap: 10px; margin-bottom: 50px;">

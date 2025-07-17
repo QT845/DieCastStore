@@ -1,8 +1,4 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
-<%@ page import="model.ModelCar" %>
-<%@ page import="model.Accessory" %>
-<%@ page import="model.ImageModel" %>
-<%@ page import="java.util.List" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
@@ -10,7 +6,7 @@
 <html>
     <head>
         <title>All Products</title>
-        <link rel="stylesheet" href="assets/CSS/productList.css">
+        <link rel="stylesheet" href="assets/css/productList.css">
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     </head>
     <body style="background: #e3f2fd;">
@@ -130,8 +126,14 @@
             <a title="Welly"><img src="assets/image/logoW.png" alt="Welly" style="width: 120px;"></a>
         </div>
 
+        <script id="chatbase-script"
+                src="https://www.chatbase.co/embed.min.js"
+                chatbotId="24voNCBYpeJgbiYuJUH4Z"
+                domain="www.chatbase.co"
+                popup="true">
+        </script>
         <jsp:include page="footer.jsp" />
-        <script src="assets/JS/productList.js"></script>
+        <script src="assets/js/productList.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     </body>
 </html>
